@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Tesseract.js OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- html2canvas for image/PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF for PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Tamil:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #ddd;
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+
+        /* ===== LEFT — CARD WRAPPER ===== */
+        .card-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            overflow: auto;
+        }
+
+        .card {
+            position: relative;
+            width: 806px;
+            /* phone par JS isko scale karta hai — exports '1' par reset */
+            zoom: var(--card-zoom, 1);
+        }
+
+        .card img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* TEXT POSITION */
+        .text {
+            position: absolute;
+            color: #222;
+            font-size: 14px;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        .hindi {
+            font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .name-hi {
+            left: 135px;
+            top: 82px;
+        }
+
+        .name-en {
+            left: 135px;
+            top: 104px;
+            font-family: Arial, sans-serif;
+        }
+
+        .dob {
+            left: 135px;
+            top: 127px;
+        }
+
+        .gender {
+            left: 135px;
+            top: 150px;
+        }
+
+        .address-hi {
+            left: 55px;
+            top: 120px;
+            width: 300px;
+        }
+
+        .address-en {
+            left: 55px;
+            top: 230px;
+            width: 300px;
+        }
+
+        .id-number {
+            left: 265px;
+            bottom: 55px;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* SAMPLE MARKING */
+        .sample {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(-20deg);
+
+            font-size: 46px;
+            font-weight: 700;
+            letter-spacing: 5px;
+
+            color: rgba(180, 0, 0, .18);
+
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* ===== RIGHT — EDIT PANEL ===== */
+        .panel {
+            width: 330px;
+            min-width: 330px;
+            background: #16213e;
+            border-left: 2px solid #0f3460;
+            padding: 16px;
+            overflow-y: auto;
+            max-height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .panel h2 {
+            font-size: 13px;
+            color: #e94560;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        /* Upload */
+        .upload-zone {
+            border: 2px dashed #e94560;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .upload-zone:hover {
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .upload-zone .icon {
+            font-size: 26px;
+        }
+
+        .upload-zone p {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 3px;
+        }
+
+        .upload-zone .small {
+            font-size: 9px;
+            color: #666;
+        }
+
+        #pdfCanvas {
+            width: 100%;
+            border: 1px solid #333;
+            border-radius: 4px;
+            display: none;
+            margin-bottom: 8px;
+        }
+
+        /* Progress */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #e94560, #ff6b81);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .status-text {
+            font-size: 10px;
+            color: #e94560;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        /* Fields */
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 9px;
+            color: #888;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .field input,
+        .field textarea {
+            width: 100%;
+            padding: 7px 8px;
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #eee;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .field input:focus,
+        .field textarea:focus {
+            border-color: #e94560;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 48px;
+            line-height: 1.3;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-red {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .btn-red:hover {
+            background: #ff6b81;
+        }
+
+        .btn-blue {
+            background: #0f3460;
+            color: #aaa;
+            border: 1px solid #333;
+        }
+
+        .btn-blue:hover {
+            background: #1a1a4e;
+            color: #fff;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 2px solid #333;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==== RESPONSIVE — phone/tablet par edits neeche, cards screen par fit ==== */
+        @media (max-width: 1120px) {
+            body {
+                flex-direction: column;
+            }
+
+            .card-wrapper {
+                order: 1;
+                overflow: visible;
+                padding: 14px 10px;
+            }
+
+            .panel {
+                order: 2;
+                width: 100%;
+                min-width: 0;
+                max-height: none;
+                position: static;
+                border-left: none;
+                border-top: 2px solid #0f3460;
+                padding: 14px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .card-wrapper {
+                padding: 8px 6px;
+            }
+
+            .panel {
+                padding: 12px;
+            }
+
+            .panel h2 {
+                font-size: 16px;
+            }
+
+            .upload-zone {
+                padding: 18px 12px;
+            }
+
+            .upload-zone .icon {
+                font-size: 32px;
+            }
+
+            .upload-zone p {
+                font-size: 13px;
+            }
+
+            .field label {
+                font-size: 11px;
+            }
+
+            .field input,
+            .field textarea {
+                font-size: 16px;
+                padding: 11px 10px;
+            }
+
+            .btn-row {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                flex: 1 1 45%;
+                padding: 13px 8px;
+                font-size: 13px;
+            }
+
+            .status-text {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== LEFT — EXISTING CARD DESIGN (1% CHANGE NAHI) ===== -->
+    <div class="card-wrapper">
+        <div class="card">
+
+            <!-- आपकी पूरी existing design image -->
+            <img src="page2.PNG" alt="Sample Design">
+
+            <!-- VERTICAL ADDRESS LABEL -->
+            <div id="prevDetails" class="vertical-address" style="
+        position:absolute;
+        left:30px;
+        top:120px;
+        height:210px;
+        writing-mode:vertical-rl;
+        transform:rotate(180deg);
+        font-family:'Noto Sans Devanagari',Arial,Helvetica,sans-serif;
+        font-size:13px;
+        font-weight:bold;
+        color:#333;
+        letter-spacing:1px;
+        z-index:5;
+    ">
+                Details as on: 29/07/2026
+            </div>
+
+
+            <div class="address-group" style="
+        position:absolute;
+        left:55px;
+        top:120px;
+        width:400px;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    ">
+
+                <!-- HINDI ADDRESS -->
+                <div id="prevAddrHi" class="text hindi" style="
+            position:relative;
+            left:0;
+            top:0;
+            width:100%;
+            line-height:1.2;
+            font-weight:500;
+        ">
+                    पता: <br>
+                    अर्धांगिनी: हरिश्चन्द्र, ग्राम-गोगाँव, पोस्ट-गोगाँव, खैरा, जिगना आर.एस.
+                    मिर्जापुर,<br>
+                    उत्तर प्रदेश - 231313
+                </div>
+
+
+                <!-- ENGLISH ADDRESS -->
+                <div id="prevAddrEn" class="text" style="
+            position:relative;
+            left:0;
+            top:0;
+            width:100%;
+            line-height:1.2;
+            font-family:'Noto Serif Tamil','Latha','Vijaya',serif;
+            font-size:14px;
+            font-weight:500;
+        ">
+                    Address: <br>
+                    W/O: Harshchand,
+                    Gram-Goganv, Post-Goganv,
+                    Khaira, PO: Jigna Rs,
+                    DIST: Mirzapur,<br>
+                    Uttar Pradesh - 231313
+                </div>
+
+            </div>
+            <!-- DEMO NUMBER -->
+            <div id="prevAadhaar" class="text demo-id" style="
+        left:245px;
+        bottom:75px;
+        font-size:32px;
+        font-weight:900;
+        letter-spacing:2px;
+        line-height:1.2;
+        font-family:'Noto Serif Tamil','Latha','Vijaya',serif;
+    ">
+                1235 8785 9659
+            </div>
+
+            <div id="prevVid" class="text id-number"
+                style="left:245px;bottom:55px;font-family:'Noto Serif Tamil','Latha','Vijaya',serif;font-weight:900;font-size:20px;">
+                VID: 1444 2584 6445 1469
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== RIGHT — EDIT PANEL ===== -->
+    <div class="panel">
+        <h2>🪪 AADHAAR EDITOR</h2>
+
+        <!-- Upload -->
+        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+            <div class="icon">📄</div>
+            <p><b>PDF Upload karein</b></p>
+            <p class="small">Aadhaar PDF se text auto extract hoga</p>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf" style="display:none;">
+
+        <canvas id="pdfCanvas"></canvas>
+        <div class="progress-bar" id="progressBar">
+            <div class="fill" id="progressFill"></div>
+        </div>
+        <div class="status-text" id="statusText"></div>
+
+        <!-- 5 EDITABLE FIELDS -->
+        <div class="field">
+            <label>📅 Details as on</label>
+            <input type="text" id="detailsOn" value="Details as on: 29/07/2026" oninput="updateCard()">
+        </div>
+
+        <div class="field">
+            <label>📍 पता (Hindi Address)</label>
+            <textarea id="addressHi" oninput="updateCard()">पता:
+अर्धांगिनी: हरिश्चन्द्र, ग्राम-गोगाँव, पोस्ट-गोगाँव, खैरा, जिगना आर.एस. मिर्जापुर,
+उत्तर प्रदेश - 231313</textarea>
+        </div>
+
+        <div class="field">
+            <label>📍 Address (English)</label>
+            <textarea id="addressEn" oninput="updateCard()">Address:
+W/O: Harshchand, Gram-Goganv, Post-Goganv, Khaira, PO: Jigna Rs, DIST: Mirzapur,
+Uttar Pradesh - 231313</textarea>
+        </div>
+
+        <div class="field">
+            <label>🔢 Aadhaar Number</label>
+            <input type="text" id="aadhaarNo" value="1235 8785 9659" maxlength="14"
+                oninput="formatAadhaar(this);updateCard()">
+        </div>
+
+        <div class="field">
+            <label>🔢 VID Number</label>
+            <input type="text" id="vidNo" value="1444 2584 6445 1469" maxlength="16"
+                oninput="formatVID(this);updateCard()">
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+            <button class="btn btn-red" onclick="document.getElementById('fileInput').click()">📤 Upload</button>
+            <button class="btn btn-blue" onclick="clearAll()">🗑️ Clear</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-green" onclick="downloadImage()">🖼️ Image Download</button>
+            <button class="btn btn-red" onclick="downloadPDF()">📄 PDF Download</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== PDF.js Setup =====
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const fileInput = document.getElementById('fileInput');
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+
+        fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+        /* =====================================================================
+           PDF TEXT → LINES — robust 2-column (name + address) layout splitter
+           ===================================================================== */
+        function itemsToText(items, vpWidth) {
+            if (!items || !items.length) return '';
+            var bands = [];
+            var sorted = items.slice().sort(function (a, b) {
+                var dy = a.y - b.y;
+                if (Math.abs(dy) <= 3) return a.x - b.x;
+                return dy;
+            });
+            for (var g = 0; g < sorted.length; g++) {
+                var it = sorted[g];
+                var placed = false;
+                for (var bi = 0; bi < bands.length; bi++) {
+                    var brep = bands[bi][0];
+                    if (Math.abs(it.y - brep.y) <= 4) { bands[bi].push(it); placed = true; break; }
+                }
+                if (!placed) bands.push([it]);
+            }
+            var totalLines = [];
+            var minColGap = Math.max(80, (vpWidth || 1200) * 0.06);
+            for (var bi2 = 0; bi2 < bands.length; bi2++) {
+                var band = bands[bi2];
+                band.sort(function (a, b) { return a.x - b.x; });
+                if (band.length >= 2) {
+                    var maxGap = 0, maxGapAt = -1, prevR = null;
+                    for (var xi = 0; xi < band.length; xi++) {
+                        var xit = band[xi];
+                        var xr = xit.x + Math.max(xit.w || 4, (xit.s || '').length * 4);
+                        if (prevR != null) {
+                            var gg = xit.x - prevR;
+                            if (gg > maxGap) { maxGap = gg; maxGapAt = xi; }
+                        }
+                        if (prevR == null || xr > prevR) prevR = xr;
+                    }
+                    if (maxGapAt > 0 && maxGap >= minColGap) {
+                        var leftChunk = '';
+                        for (var li = 0; li < maxGapAt; li++) leftChunk += (band[li].s || '');
+                        var rightChunk = '';
+                        for (var ri = maxGapAt; ri < band.length; ri++) rightChunk += (band[ri].s || '');
+                        totalLines.push(leftChunk);
+                        totalLines.push(rightChunk);
+                        continue;
+                    }
+                }
+                var single = '';
+                for (var si = 0; si < band.length; si++) single += (band[si].s || '');
+                totalLines.push(single);
+            }
+            return totalLines.map(function (ln) {
+                return ln.replace(/[ \t\u00A0]+/g, ' ').replace(/^ | $/g, '');
+            }).filter(function (ln) { return ln && ln.length > 0; }).join('\n');
+        }
+
+        // ===== Handle PDF =====
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') { alert('Sirf PDF upload karein!'); return; }
+            showProgress('PDF load ho raha hai...');
+            const ab = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+
+            var allDirectText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const scale = 2;
+                const vp = page.getViewport({ scale });
+                canvas.width = vp.width; canvas.height = vp.height; canvas.style.display = 'block';
+
+                /* --- FIRST: Direct PDF embedded text (faster + cleaner for real Aadhaar PDFs) --- */
+                try {
+                    const tc = await page.getTextContent();
+                    const pageItems = [];
+                    tc.items.forEach(function (it) {
+                        const s = (it.str == null ? '' : String(it.str));
+                        const tx = pdfjsLib.Util.transform(vp.transform, it.transform);
+                        const th = Math.abs(it.height) || Math.hypot(it.transform[2], it.transform[3]) || 10;
+                        const tw = Math.abs(it.width) || Math.abs(it.transform[0]) || Math.max(1, s.length) * 4;
+                        pageItems.push({
+                            s: s,
+                            x: tx[4],
+                            y: tx[5] - th,
+                            w: tw,
+                            h: th
+                        });
+                    });
+                    allDirectText += itemsToText(pageItems, vp.width) + '\n';
+                } catch (te) { /* ignore */ }
+
+                showProgress('Page ' + i + '/' + pdf.numPages + ' process ho raha hai...');
+                updateProgress(Math.round((i / pdf.numPages) * 40));
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            }
+
+            /* Agar direct text mein kaafi valid content hai → use direct, skip OCR (fast) */
+            var directValidLines = 0;
+            var allLines = allDirectText.split('\n');
+            allLines.forEach(function (l) {
+                var cl = _cleanLine(l);
+                if (cl.length >= 6 && !_isGarbled(cl)) directValidLines++;
+            });
+
+            var finalText = '';
+            if (directValidLines >= 3) {
+                /* Direct PDF embedded text is good */
+                finalText = allDirectText;
+                updateProgress(90);
+            } else {
+                /* Direct text mostly garbled (PUA glyphs) → fall back to Tesseract OCR */
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const scale = 2;
+                    const vp = page.getViewport({ scale });
+                    canvas.width = vp.width; canvas.height = vp.height;
+                    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+                    showProgress('Page ' + i + '/' + pdf.numPages + ' — OCR chal raha hai...');
+                    updateProgress(40 + Math.round((i / pdf.numPages) * 50));
+
+                    const r = await Tesseract.recognize(canvas, 'hin+eng', {
+                        logger: m => { if (m.status === 'recognizing text') updateProgress(40 + Math.round((i / pdf.numPages) * 50) + Math.round(m.progress * 10)); }
+                    });
+                    finalText += r.data.text + '\n';
+                }
+            }
+
+            if (finalText) parseOCR(finalText);
+
+            updateProgress(100);
+            showProgress('✅ Done! Details edit karein →');
+        }
+
+        // ===== Helpers for language ratio =====
+        function _cleanLine(t) {
+            return (t || '').replace(/[\uFFFD\u25A0-\u25FF\u2580-\u259F\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+                .replace(/\s+/g, ' ').trim();
+        }
+        function _hindiRatio(t) {
+            var total = (t.match(/\S/g) || []).length;
+            if (!total) return 0;
+            var hi = (t.match(/[\u0900-\u097F]/g) || []).length;
+            return hi / total;
+        }
+        function _englishRatio(t) {
+            var total = (t.match(/\S/g) || []).length;
+            if (!total) return 0;
+            var en = (t.match(/[A-Za-z]/g) || []).length;
+            return en / total;
+        }
+        function _hasAnyHindi(t) {
+            return /[\u0900-\u097F]/.test(t || '');
+        }
+        function _hasValidHindi(t) {
+            return (t.match(/[\u0900-\u097F]/g) || []).length >= 2;
+        }
+        function _isGarbled(t) {
+            var clean = t.replace(/\s/g, '');
+            if (!clean.length) return true;
+            var puaSuppl = (clean.match(/[\uDB80-\uDBBF][\uDC00-\uDFFF]/g) || []).length;
+            var bmpBad = (clean.match(/[\uFFFD\u25A0-\u25FF\u2580-\u259F\uE000-\uF8FF]/g) || []).length;
+            var bad = bmpBad + puaSuppl;
+            return bad / clean.length > 0.3;
+        }
+
+        // ===== Parse OCR — Better extraction =====
+        function parseOCR(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            const fullText = lines.join(' ');
+
+            // ---- Aadhaar Number (12 digits, groups of 4) ----
+            const aadhaarPatterns = [
+                /\b(\d{4}\s\d{4}\s\d{4})\b/,           // 1234 5678 9012
+                /\b(\d{4}\s?\d{4}\s?\d{4})\b/,          // 12345678 9012
+                /\b(\d{12})\b/,                          // 123456789012
+                /(\d{4}[\s\-]\d{4}[\s\-]\d{4})/         // 1234-5678-9012
+            ];
+            for (const pat of aadhaarPatterns) {
+                const m = fullText.match(pat);
+                if (m) {
+                    let num = m[1].replace(/[\s\-]/g, '');
+                    if (num.length === 12) {
+                        document.getElementById('aadhaarNo').value = num.replace(/(\d{4})(?=\d)/g, '$1 ');
+                        break;
+                    }
+                }
+            }
+
+            // ---- VID Number (16 digits) ----
+            const vidPatterns = [
+                /\b(\d{4}\s\d{4}\s\d{4}\s\d{4})\b/,
+                /\b(\d{16})\b/,
+                /(\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4})/
+            ];
+            for (const pat of vidPatterns) {
+                const matches = fullText.match(pat);
+                if (matches) {
+                    let num = matches[1].replace(/[\s\-]/g, '');
+                    if (num.length === 16) {
+                        document.getElementById('vidNo').value = num.replace(/(\d{4})(?=\d)/g, '$1 ');
+                        break;
+                    }
+                }
+            }
+
+            // ---- DOB / Date ----
+            const dobMatch = fullText.match(/(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/);
+            if (dobMatch) {
+                // DOB field not in card but store it
+            }
+
+            // ---- Hindi Address — sirf lines jisme Devanagari ratio >= 0.45, English <= 0.35 ----
+            const hindiAddrKeywords = lines.filter(l => {
+                var cl = _cleanLine(l);
+                if (!_hasValidHindi(cl) || _isGarbled(cl)) return false;
+                if (cl.length <= 5) return false;
+                if (/(Mobile|Phone|Tel|Email|Signature|Digitally|Identification|Authority|Date\s*:|^IST$|Aadhaar|issued|VID|Enrolment|^To$)/i.test(cl)) return false;
+                var hr = _hindiRatio(cl);
+                var er = _englishRatio(cl);
+                if (hr < 0.45) return false;
+                if (er > 0.35) return false;
+                return (cl.includes(',') || cl.includes('-') || /\d{6}/.test(cl) ||
+                    /ग्राम|पोस्ट|जिला|नगर|राज्य|प्रदेश|मोहल्ला|मकान|वार्ड|पता|अर्धांगिनी|पत्नी|पुत्र|पुत्री|डाकघर/.test(cl));
+            });
+            if (hindiAddrKeywords.length > 0) {
+                document.getElementById('addressHi').value = 'पता:\n' + hindiAddrKeywords.map(_cleanLine).join('\n');
+            }
+
+            // ---- English Address — ek bhi Devanagari char nahi chahiye ----
+            const engAddrKeywords = lines.filter(l => {
+                var cl = _cleanLine(l);
+                if (_hasAnyHindi(cl)) return false;
+                if (_isGarbled(cl)) return false;
+                if (/^\d{4}\s?\d{4}/.test(cl)) return false;
+                if (cl.length <= 5) return false;
+                if (/(Mobile|Phone|Tel|Email|Signature|Digitally|Identification|Authority|Date\s*:|^IST$|Aadhaar|issued|VID|Enrolment|^To$|Details)/i.test(cl)) return false;
+                return /(W\/O|S\/O|D\/O|C\/O|Gram|Post|DIST|Khaira|Mirzapur|Uttar|Pradesh|Village|City|State|Pin|Code|Bihar|Maharashtra|Rajasthan|Delhi|Punjab|Haryana|Gujarat|Madhya|Karnataka|Tamil|Kerala|Andhra|Telangana|Odisha|West|Bengal|Jharkhand|Chhattisgarh|Assam|\d{6})/i.test(cl);
+            });
+            if (engAddrKeywords.length > 0) {
+                document.getElementById('addressEn').value = 'Address:\n' + engAddrKeywords.map(_cleanLine).join('\n');
+            }
+
+            // ---- "Details as on" ----
+            const detailsMatch = fullText.match(/Details\s+as\s+on[:\s]*([\d\/\-\.]+)/i);
+            if (detailsMatch) {
+                document.getElementById('detailsOn').value = 'Details as on: ' + detailsMatch[1];
+            }
+
+            updateCard();
+        }
+
+        // ===== Update Card =====
+        function updateCard() {
+            const v = id => document.getElementById(id).value;
+
+            // Details as on
+            document.getElementById('prevDetails').textContent = v('detailsOn');
+
+            // Hindi Address
+            document.getElementById('prevAddrHi').innerHTML = v('addressHi').replace(/\n/g, '<br>');
+
+            // English Address
+            document.getElementById('prevAddrEn').innerHTML = v('addressEn').replace(/\n/g, '<br>');
+
+            // Aadhaar Number
+            document.getElementById('prevAadhaar').textContent = v('aadhaarNo');
+
+            // VID
+            document.getElementById('prevVid').textContent = 'VID: ' + v('vidNo');
+        }
+
+        // ===== Format Aadhaar =====
+        function formatAadhaar(el) {
+            let v = el.value.replace(/\D/g, '').substring(0, 12);
+            el.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+        }
+
+        // ===== Format VID =====
+        function formatVID(el) {
+            let v = el.value.replace(/\D/g, '').substring(0, 16);
+            el.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+        }
+
+        // ===== Progress =====
+        function showProgress(msg) {
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('statusText').style.display = 'block';
+            document.getElementById('statusText').innerHTML = '<span class="spinner"></span> ' + msg;
+        }
+        function updateProgress(p) {
+            document.getElementById('progressFill').style.width = p + '%';
+        }
+
+        // =====================================================================
+        // RESPONSIVE ZOOM — phone par card ko screen width ke andar fit karo
+        // (806px card zoom hota hai, overlays apni jagah pe wahi sambandh mein
+        //  scale hote hain). Desktop par zoom = 1.
+        // =====================================================================
+        function computeCardZoom() {
+            var card = document.querySelector('.card');
+            if (!card) return;
+            var vw = document.documentElement.clientWidth || window.innerWidth;
+            var base = 1;
+            if (vw <= 1120) {
+                var pad = vw <= 640 ? 16 : 40;
+                base = Math.min(1, (vw - pad) / 806);
+                if (base < 0.3) base = 0.3;
+            }
+            card.style.setProperty('--card-zoom', String(base));
+        }
+        window.addEventListener('resize', computeCardZoom);
+        window.addEventListener('orientationchange', function () { setTimeout(computeCardZoom, 150); });
+
+        // =====================================================================
+        // DOWNLOAD AS IMAGE
+        // =====================================================================
+
+        async function downloadImage() {
+            const card = document.querySelector('.card');
+            showProgress('Image ban raha hai...');
+
+            var prevZoom = card.style.getPropertyValue('--card-zoom');
+            card.style.setProperty('--card-zoom', '1');
+
+            try {
+                await new Promise(function (r) { setTimeout(r, 80); });
+                const canvasImg = await html2canvas(card, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: '#fff',
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                link.download = 'aadhaar-card.png';
+                link.href = canvasImg.toDataURL('image/png');
+                link.click();
+
+                showProgress('✅ Image download ho gaya!');
+            } catch (e) {
+                showProgress('❌ Image download mein dikkat');
+            } finally {
+                card.style.setProperty('--card-zoom', prevZoom || '');
+            }
+        }
+
+        // =====================================================================
+        // DOWNLOAD AS PDF
+        // =====================================================================
+
+        async function downloadPDF() {
+            const card = document.querySelector('.card');
+            showProgress('PDF ban raha hai...');
+
+            var prevZoom = card.style.getPropertyValue('--card-zoom');
+            card.style.setProperty('--card-zoom', '1');
+
+            try {
+                await new Promise(function (r) { setTimeout(r, 80); });
+                const canvasImg = await html2canvas(card, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: '#fff',
+                    logging: false
+                });
+
+                const imgData = canvasImg.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: [85.6, 53.98]
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 53.98);
+                pdf.save('aadhaar-card.pdf');
+
+                showProgress('✅ PDF download ho gaya!');
+            } catch (e) {
+                showProgress('❌ PDF download mein dikkat');
+            } finally {
+                card.style.setProperty('--card-zoom', prevZoom || '');
+            }
+        }
+
+        // ===== Clear =====
+        function clearAll() {
+            ['detailsOn', 'addressHi', 'addressEn', 'aadhaarNo', 'vidNo'].forEach(id => document.getElementById(id).value = '');
+            canvas.style.display = 'none';
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('statusText').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+            updateCard();
+        }
+
+        // =====================================================================
+        // INIT — zoom + default view
+        // =====================================================================
+        computeCardZoom();
+    </script>
+
+</body>
+
+</html>

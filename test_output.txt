@@ -1,0 +1,301 @@
+Warning: Cannot polyfill `DOMMatrix`, rendering may be broken: "Error: Cannot find module 'canvas'
+Require stack:
+- /Users/singsys/Downloads/aadhar design/node_modules/pdfjs-dist/legacy/build/pdf.js
+- /Users/singsys/Downloads/aadhar design/test_itemsToText_final.js".
+Warning: Cannot polyfill `Path2D`, rendering may be broken: "Error: Cannot find module 'canvas'
+Require stack:
+- /Users/singsys/Downloads/aadhar design/node_modules/pdfjs-dist/legacy/build/pdf.js
+- /Users/singsys/Downloads/aadhar design/test_itemsToText_final.js".
+
+================================================================================
+FILE: 210164384605.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% GARBLED] नामांकन क्रम/ Enrolment No.: 0000/00668/23966
+  2: [hr0% er100% GARBLED] To
+  3: [hr100% er0% GARBLED] रमेश कुमार
+  4: [hr0% er100% GARBLED] Ramesh Kumar
+  5: [hr0% er80% GARBLED] C/O Sundar,
+  6: [hr0% er97% GARBLED] Gram Mahewa Post Hariharpur Bedauli,
+  7: [hr0% er85% GARBLED] VTC: Mirzapur,
+  8: [hr0% er83% GARBLED] PO: Mirzapur,
+  9: [hr0% er89% GARBLED] District: Mirzapur,
+ 10: [hr0% er89% GARBLED] State: Uttar Pradesh,
+ 11: [hr0% er50% GARBLED] PIN Code: 231001
+ 12: [hr0% er35% GARBLED] Mobile: 8542009948
+ 13: [hr0% er100% GARBLED] Signature Not Verified
+ 14: [hr0% er100% GARBLED] Digitally signed by DS Unique
+ 15: [hr0% er100% GARBLED] Identification Authority of India
+ 16: [hr0% er0% GARBLED] 06
+ 17: [hr0% er17% GARBLED] Date: 2026.07.25 07:17:27
+ 18: [hr0% er100% GARBLED] IST
+ 19: [hr0% er0% GARBLED] 2101 6438 4605
+ 20: [hr0% er15% GARBLED] VID : 9165 9417 5590 4490
+ 21: [hr75% er0% GARBLED] पता:
+ 22: [hr100% er0% GARBLED] रमेश कुमार
+ 23: [hr91% er0% GARBLED] सु न्दर, ाम महेवा पो स्ट हरहरपुर बेदौली, मज़ापुर, मज़ापुर,
+ 24: [hr0% er100% GARBLED] Ramesh Kumar
+ 25: [hr86% er0% GARBLED] मज़ापुर,
+ 26: [hr61% er0% GARBLED] उत्त र प्रदेश - 231001
+ 27: [hr29% er14% GARBLED] जन् म तथ/DOB: 02/06/2002
+ 28: [hr0% er88% GARBLED] Address:
+ 29: [hr50% er40% GARBLED] पु रुष/ MALE
+ 30: [hr0% er93% GARBLED] C/O Sundar, Gram Mahewa Post Hariharpur Bedauli,
+ 31: [hr0% er86% GARBLED] Mirzapur, PO: Mirzapur, DIST: Mirzapur,
+ 32: [hr0% er63% GARBLED] Uttar Pradesh - 231001
+ 33: [hr0% er50% GARBLED] Details as on: 25/07/2026
+ 34: [hr0% er56% GARBLED] Aadhaar no. issued: 29/05/2015
+ 35: [hr0% er0% GARBLED] 2101 6438 4605
+ 36: [hr0% er0% GARBLED] 2101 6438 4605
+ 37: [hr0% er15% GARBLED] VID : 9165 9417 5590 4490
+
+DOB index: 26
+✓ Name (Hindi) : (NOT FOUND)
+✓ Name (English): (NOT FOUND)
+
+✓ Hindi Address (पता) lines:
+    (NOT FOUND)
+
+✓ English Address lines:
+    (NOT FOUND)
+
+✓ DOB/Gender line: जन् म तथ/DOB: 02/06/2002
+
+================================================================================
+FILE: 212576167624.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% GARBLED] नामांकन क्रम/ Enrolment No.: 1420/50102/06859
+  2: [hr0% er100% GARBLED] To
+  3: [hr100% er0% GARBLED] सीता देवी
+  4: [hr0% er100% GARBLED] Sita Devi
+  5: [hr0% er90% GARBLED] W/O: Sworgiy Virendra Kumar Singh,
+  6: [hr0% er93% GARBLED] jigana bichkot,
+  7: [hr0% er91% GARBLED] post jigana,
+  8: [hr0% er80% GARBLED] VTC: Jigna,
+  9: [hr0% er82% GARBLED] PO: Jigna Rs,
+ 10: [hr0% er89% GARBLED] Sub District: Chunar,
+ 11: [hr0% er89% GARBLED] District: Mirzapur,
+ 12: [hr0% er89% GARBLED] State: Uttar Pradesh,
+ 13: [hr0% er50% GARBLED] PIN Code: 231313
+ 14: [hr0% er35% GARBLED] Mobile: 9793100782
+ 15: [hr0% er100% GARBLED] Signature Not Verified
+ 16: [hr0% er100% GARBLED] Digitally signed by DS Unique
+ 17: [hr0% er100% GARBLED] Identification Authority of India
+ 18: [hr0% er0% GARBLED] 06
+ 19: [hr0% er17% GARBLED] Date: 2026.07.30 18:53:56
+ 20: [hr0% er100% GARBLED] IST
+ 21: [hr0% er0% GARBLED] 2125 7616 7624
+ 22: [hr0% er15% GARBLED] VID : 9194 1247 0997 6058
+ 23: [hr75% er0% GARBLED] पता:
+ 24: [hr100% er0% GARBLED] सीता देवी
+ 25: [hr93% er0% GARBLED] अधागनी: स्वगय वरे न्द्रकुमार सह, जगना बचकोट, पो स्ट
+ 26: [hr0% er100% GARBLED] Sita Devi
+ 27: [hr83% er0% GARBLED] जगना, जगना, जगना रस, मज़ापुर,
+ 28: [hr61% er0% GARBLED] उत्त र प्रदेश - 231313
+ 29: [hr29% er14% GARBLED] जन् म तथ/DOB: 01/02/1965
+ 30: [hr0% er88% GARBLED] Address:
+ 31: [hr36% er55% GARBLED] महला/ FEMALE
+ 32: [hr0% er91% GARBLED] W/O: Sworgiy Virendra Kumar Singh, jigana bichkot,
+ 33: [hr0% er86% GARBLED] post jigana, Jigna, PO: Jigna Rs, DIST: Mirzapur,
+ 34: [hr0% er63% GARBLED] Uttar Pradesh - 231313
+ 35: [hr0% er50% GARBLED] Details as on: 30/07/2026
+ 36: [hr0% er56% GARBLED] Aadhaar no. issued: 30/04/2015
+ 37: [hr0% er0% GARBLED] 2125 7616 7624
+ 38: [hr0% er0% GARBLED] 2125 7616 7624
+ 39: [hr0% er15% GARBLED] VID : 9194 1247 0997 6058
+
+DOB index: 28
+✓ Name (Hindi) : (NOT FOUND)
+✓ Name (English): (NOT FOUND)
+
+✓ Hindi Address (पता) lines:
+    (NOT FOUND)
+
+✓ English Address lines:
+    (NOT FOUND)
+
+✓ DOB/Gender line: जन् म तथ/DOB: 01/02/1965
+
+================================================================================
+FILE: 215270342984.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr15% er28% GARBLED] ामां कम/ Enrolment No.: 2777/11042/00721
+  2: [hr0% er100% GARBLED] To
+  3: [hr78% er0% GARBLED] ंजा देवी
+  4: [hr0% er100% GARBLED] Sanjana Devi
+  5: [hr0% er81% GARBLED] W/O: Sanjay Kumar,
+  6: [hr0% er92% GARBLED] Post Paidapur,
+  7: [hr0% er85% GARBLED] VTC: Madhopur,
+  8: [hr0% er83% GARBLED] PO: Mirzapur,
+  9: [hr0% er89% GARBLED] Sub District: Chunar,
+ 10: [hr0% er89% GARBLED] District: Mirzapur,
+ 11: [hr0% er89% GARBLED] State: Uttar Pradesh,
+ 12: [hr0% er50% GARBLED] PIN Code: 231001
+ 13: [hr0% er35% GARBLED] Mobile: 8176015869
+ 14: [hr0% er100% GARBLED] Signature Not Verified
+ 15: [hr0% er100% GARBLED] Digitally signed by DS Unique
+ 16: [hr0% er100% GARBLED] Identification Authority of India
+ 17: [hr0% er0% GARBLED] 06
+ 18: [hr0% er17% GARBLED] Date: 2026.07.29 10:25:59
+ 19: [hr0% er100% GARBLED] IST
+ 20: [hr0% er0% GARBLED] 2152 7034 2984
+ 21: [hr0% er100% GARBLED] VID
+ 22: [hr25% er0% GARBLED] ा:
+ 23: [hr78% er0% GARBLED] ंजा देवी
+ 24: [hr60% er4% GARBLED] W/O: ंजय ुमार, ोसट ैड़ाुर, माधोुर, मज़ाुर, मज़ाुर,
+ 25: [hr0% er100% GARBLED] Sanjana Devi
+ 26: [hr50% er0% GARBLED] उतर पदेश - 231001
+ 27: [hr18% er14% GARBLED] जनम थ/DOB: 01/01/1986
+ 28: [hr0% er88% GARBLED] Address:
+ 29: [hr0% er85% GARBLED] W/O: Sanjay Kumar, Post Paidapur, Madhopur, PO:
+ 30: [hr33% er50% GARBLED] महला/ FEMALE
+ 31: [hr0% er87% GARBLED] Mirzapur, DIST: Mirzapur,
+ 32: [hr0% er63% GARBLED] Uttar Pradesh - 231001
+ 33: [hr0% er50% GARBLED] Details as on: 29/07/2026
+ 34: [hr0% er56% GARBLED] Aadhaar no. issued: 06/11/2014
+ 35: [hr0% er100% GARBLED] VID
+
+DOB index: 26
+✓ Name (Hindi) : (NOT FOUND)
+✓ Name (English): (NOT FOUND)
+
+✓ Hindi Address (पता) lines:
+    (NOT FOUND)
+
+✓ English Address lines:
+    (NOT FOUND)
+
+✓ DOB/Gender line: जनम थ/DOB: 01/01/1986
+
+================================================================================
+FILE: 215756525476.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% GARBLED] नामांकन क्रम/ Enrolment No.: 0636/10818/42719
+  2: [hr0% er100% GARBLED] To
+  3: [hr100% er0% GARBLED] गौरी देवी
+  4: [hr0% er100% GARBLED] Gauri Devi
+  5: [hr0% er77% GARBLED] W/O: Lachiman,
+  6: [hr0% er92% GARBLED] mishr ka pura,
+  7: [hr0% er95% GARBLED] post pahada paidapur,
+  8: [hr0% er83% GARBLED] VTC: Katopur,
+  9: [hr0% er83% GARBLED] PO: Mirzapur,
+ 10: [hr0% er89% GARBLED] Sub District: Chunar,
+ 11: [hr0% er89% GARBLED] District: Mirzapur,
+ 12: [hr0% er89% GARBLED] State: Uttar Pradesh,
+ 13: [hr0% er50% GARBLED] PIN Code: 231001
+ 14: [hr0% er35% GARBLED] Mobile: 7754073896
+ 15: [hr0% er100% GARBLED] Signature Not Verified
+ 16: [hr0% er100% GARBLED] Digitally signed by DS Unique
+ 17: [hr0% er100% GARBLED] Identification Authority of India
+ 18: [hr0% er0% GARBLED] 06
+ 19: [hr0% er17% GARBLED] Date: 2026.07.27 12:52:10
+ 20: [hr0% er100% GARBLED] IST
+ 21: [hr0% er0% GARBLED] 2157 5652 5476
+ 22: [hr0% er15% GARBLED] VID : 9185 2472 7995 8183
+ 23: [hr75% er0% GARBLED] पता:
+ 24: [hr100% er0% GARBLED] गौरी देवी
+ 25: [hr90% er0% GARBLED] अधागनी: लछमन, म श्रका पुरा, पो स्ट पहाड़ा पैडापुर,
+ 26: [hr0% er100% GARBLED] Gauri Devi
+ 27: [hr86% er0% GARBLED] काटोपुर, मज़ापुर, मज़ापुर,
+ 28: [hr61% er0% GARBLED] उत्त र प्रदेश - 231001
+ 29: [hr29% er14% GARBLED] जन् म तथ/DOB: 01/01/1979
+ 30: [hr0% er88% GARBLED] Address:
+ 31: [hr36% er55% GARBLED] महला/ FEMALE
+ 32: [hr0% er89% GARBLED] W/O: Lachiman, mishr ka pura, post pahada paidapur,
+ 33: [hr0% er85% GARBLED] Katopur, PO: Mirzapur, DIST: Mirzapur,
+ 34: [hr0% er63% GARBLED] Uttar Pradesh - 231001
+ 35: [hr0% er50% GARBLED] Details as on: 27/07/2026
+ 36: [hr0% er56% GARBLED] Aadhaar no. issued: 25/11/2014
+ 37: [hr0% er0% GARBLED] 2157 5652 5476
+ 38: [hr0% er0% GARBLED] 2157 5652 5476
+ 39: [hr0% er15% GARBLED] VID : 9185 2472 7995 8183
+
+DOB index: 28
+✓ Name (Hindi) : (NOT FOUND)
+✓ Name (English): (NOT FOUND)
+
+✓ Hindi Address (पता) lines:
+    (NOT FOUND)
+
+✓ English Address lines:
+    (NOT FOUND)
+
+✓ DOB/Gender line: जन् म तथ/DOB: 01/01/1979
+
+================================================================================
+FILE: 216160700256.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% GARBLED] नामांकन क्रम/ Enrolment No.: 0000/00682/76157
+  2: [hr0% er100% GARBLED] To
+  3: [hr100% er0% GARBLED] आशीष कुमार
+  4: [hr0% er100% GARBLED] Ashish Kumar
+  5: [hr0% er75% GARBLED] S/O- NAND LAL,
+  6: [hr0% er83% GARBLED] JIUTI,
+  7: [hr0% er92% GARBLED] BHATAULI ROAD,
+  8: [hr0% er91% GARBLED] POST SANDWA,
+  9: [hr0% er85% GARBLED] VTC: Mirzapur,
+ 10: [hr0% er83% GARBLED] PO: Mirzapur,
+ 11: [hr0% er89% GARBLED] District: Mirzapur,
+ 12: [hr0% er89% GARBLED] State: Uttar Pradesh,
+ 13: [hr0% er50% GARBLED] PIN Code: 231001
+ 14: [hr0% er35% GARBLED] Mobile: 9621715332
+ 15: [hr0% er100% GARBLED] Signature Not Verified
+ 16: [hr0% er100% GARBLED] Digitally signed by DS Unique
+ 17: [hr0% er100% GARBLED] Identification Authority of India
+ 18: [hr0% er0% GARBLED] 06
+ 19: [hr0% er17% GARBLED] Date: 2026.07.24 09:11:03
+ 20: [hr0% er100% GARBLED] IST
+ 21: [hr0% er0% GARBLED] 2161 6070 0256
+ 22: [hr0% er15% GARBLED] VID : 9149 4158 3186 3763
+ 23: [hr75% er0% GARBLED] पता:
+ 24: [hr100% er0% GARBLED] आशीष कुमार
+ 25: [hr85% er0% GARBLED] एस/ओ - नन् द लाल, जउती, भटौली रोड, पो स्ट संदवा, मीज़ापुर,
+ 26: [hr0% er100% GARBLED] Ashish Kumar
+ 27: [hr88% er0% GARBLED] मीज़ापुर, मीज़ापुर,
+ 28: [hr61% er0% GARBLED] उत्त र प्रदेश - 231001
+ 29: [hr29% er14% GARBLED] जन् म तथ/DOB: 17/06/1999
+ 30: [hr0% er88% GARBLED] Address:
+ 31: [hr50% er40% GARBLED] पु रुष/ MALE
+ 32: [hr0% er86% GARBLED] S/O- NAND LAL, JIUTI, BHATAULI ROAD, POST
+ 33: [hr0% er86% GARBLED] SANDWA, Mirzapur, PO: Mirzapur, DIST: Mirzapur,
+ 34: [hr0% er63% GARBLED] Uttar Pradesh - 231001
+ 35: [hr0% er50% GARBLED] Details as on: 24/07/2026
+ 36: [hr0% er56% GARBLED] Aadhaar no. issued: 02/03/2015
+ 37: [hr0% er0% GARBLED] 2161 6070 0256
+ 38: [hr0% er0% GARBLED] 2161 6070 0256
+ 39: [hr0% er15% GARBLED] VID : 9149 4158 3186 3763
+
+DOB index: 28
+✓ Name (Hindi) : (NOT FOUND)
+✓ Name (English): (NOT FOUND)
+
+✓ Hindi Address (पता) lines:
+    (NOT FOUND)
+
+✓ English Address lines:
+    (NOT FOUND)
+
+✓ DOB/Gender line: जन् म तथ/DOB: 17/06/1999

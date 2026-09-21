@@ -1,0 +1,2627 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪪 AADHAAR DEMO — ID CARD EDITOR (Fictional / Sample Only)</title>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Tesseract.js OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- html2canvas for PNG / PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Tamil:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* =====================================================================
+   PAGE 1 — ADJUSTABLE COORDINATES (CSS CUSTOM PROPERTIES)
+   ---------------------------------------------------------------------
+   page1.PNG (648x413) ko 806px chaudai par render kiya jaata hai.
+   Neeche diye gaye --p1-* variables ko badal kar Page 1 ke overlays
+   exact jagah par shift kar sakte hain. Ye sirf DEFAULT positions hain:
+   page1.PNG khud dekh kar laazmi tweak karein.
+   ===================================================================== */
+        .p1card {
+            --p1-issued-l: 30px;
+            /* "Aadhaar no. issued" VERTICAL : left  */
+            --p1-issued-t: 120px;
+            /* "Aadhaar no. issued" VERTICAL : top   */
+
+            --p1-name-hi-l: 240px;
+            /* Name (Hindi)   : left — doosra column (details) */
+            --p1-name-hi-t: 110px;
+            /* Name (Hindi)   : top  */
+            --p1-name-hi-fs: 14px;
+            /* Name (Hindi)   : font-size */
+
+            --p1-name-en-l: 240px;
+            /* Name (English) : left */
+            --p1-name-en-t: 133px;
+            /* Name (English) : top  */
+            --p1-name-en-fs: 14px;
+            /* Name (English) : font-size */
+
+            --p1-dob-l: 240px;
+            /* DOB            : left */
+            --p1-dob-t: 157px;
+            /* DOB            : top  */
+            --p1-dob-fs: 13px;
+            /* DOB            : font-size */
+
+            --p1-gender-l: 240px;
+            /* Gender         : left */
+            --p1-gender-t: 180px;
+            /* Gender         : top  */
+            --p1-gender-fs: 13px;
+            /* Gender         : font-size */
+
+            --p1-photo-l: 70px;
+            /* Photo : left  — pehla column (row layout) */
+            --p1-photo-t: 110px;
+            /* Photo : top  — details ke same level (niche kiya) */
+            --p1-photo-w: 150px;
+            /* Photo : width  (passport size)                     */
+            --p1-photo-h: 180px;
+            /* Photo : height                                    */
+
+            /* Demo Aadhaar Number — Page 1 par VID nahi hai, yahi number hota hai */
+            --p1-uid-l: 245px;
+            --p1-uid-b: 55px;
+            --p1-uid-fs: 32px;
+        }
+
+        /* =====================================================================
+   BASE LAYOUT — aware of given fix CSS (cards fixed 806px, panel 330px)
+   NOTE: .card-wrapper yahan normal block-flow hai (flex-column nahi),
+   isliye .card par {flex:0 0 806px} height par asar nahi karta —
+   sirf width/min-width real width fix karte hain. Isi se card kabhi
+   shift nahi hota chahe panel kuch bhi ho.
+   ===================================================================== */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            /* row: [card-wrapper] [panel] */
+            background: linear-gradient(160deg, #6b7c93 0%, #3a4a63 100%);
+            font-family: Arial, sans-serif;
+        }
+
+        /* ---- LEFT — card area ---- */
+        .card-wrapper {
+            flex: 1 1 auto;
+            /* given fix */
+            min-width: 0;
+            /* given fix */
+            padding: 34px 26px;
+            overflow: auto;
+            /* small screens par scroll ho sakta hai */
+        }
+
+        #cardsStack {
+            width: fit-content;
+            margin: 0 auto;
+            display: block;
+            /* responsive zoom — JS isko phone par screen fit hone tak scale karta hai.
+               Export (PNG/PDF) ke waqt '1' par reset hota hai taaki print waale size
+               par hi output bane. */
+            zoom: var(--card-zoom, 1);
+        }
+
+        /* ---- each card: fixed 806px, relative, never moves ---- */
+        .card {
+            position: relative;
+            /* overlays isi ke hisaab se absolute */
+            width: 806px;
+            /* exact fixed width */
+            min-width: 806px;
+            /* never shrink */
+            flex: 0 0 806px;
+            /* inert in block flow — width fix ke liye rakha gaya */
+            margin: 0 0 46px;
+            /* stack spacing (page2 last wale par gap zyada mat do) */
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, .38);
+            transition: box-shadow .35s ease, outline .35s ease;
+        }
+
+        .card:last-child {
+            margin-bottom: 0;
+        }
+
+        /* selected page — soft glow (koi red border nahi) */
+        .card.current {
+            box-shadow: 0 0 18px rgba(255, 255, 255, .35),
+                0 8px 26px rgba(233, 69, 96, .35),
+                0 20px 52px rgba(0, 0, 0, .45);
+        }
+
+        /* background image — exactly original aspect ratio (no distortion) */
+        .card img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* =====================================================================
+   WATERMARK — hiya screen par bhi, downloaded PNG/PDF mein bhi aata hai
+   ===================================================================== */
+        .watermark {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(-22deg);
+            font-size: 56px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: rgba(178, 20, 20, .185);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 60;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, .35);
+            user-select: none;
+        }
+
+        /* =====================================================================
+   PAGE 1 OVERLAYS — sab .p1 position:absolute + variables se positioned
+   ===================================================================== */
+        .p1 {
+            position: absolute;
+            color: #222;
+            z-index: 40;
+            line-height: 1.35;
+            font-weight: 600;
+        }
+
+        /* "Aadhaar no. issued" — VERTICAL, same style jaise Page 2 ka "Details as on" */
+        .p1-issued {
+            left: var(--p1-issued-l);
+            /* 30px — SAME jaise Page 2 ka label */
+            top: var(--p1-issued-t);
+            /* 120px — SAME start jaise Page 2   */
+            height: 210px;
+            /* SAME span jaise Page 2 ka label   */
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-family: "Noto Sans Devanagari", Arial, sans-serif;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 0px;
+            white-space: nowrap;
+        }
+
+        .p1-name-hi {
+            left: var(--p1-name-hi-l);
+            top: var(--p1-name-hi-t);
+            font-size: var(--p1-name-hi-fs);
+            font-weight: 500;
+            font-family: "Noto Sans Devanagari", Arial, sans-serif;
+            white-space: nowrap;
+        }
+
+        .p1-name-en {
+            left: var(--p1-name-en-l);
+            top: var(--p1-name-en-t);
+            font-size: var(--p1-name-en-fs);
+            font-weight: 500;
+            font-family: "Noto Serif Tamil", "Latha", "Vijaya", serif;
+            white-space: nowrap;
+        }
+
+        .p1-dob {
+            left: var(--p1-dob-l);
+            top: var(--p1-dob-t);
+            font-size: var(--p1-dob-fs);
+            font-family: "Noto Serif Tamil", "Latha", "Vijaya", "Noto Sans Devanagari", serif;
+            white-space: nowrap;
+            font-weight: 500;
+
+        }
+
+        .p1-gender {
+            left: var(--p1-gender-l);
+            top: var(--p1-gender-t);
+            font-size: var(--p1-gender-fs);
+            font-family: "Noto Serif Tamil", "Latha", "Vijaya", "Noto Sans Devanagari", serif;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        /* Photo box — drag karke move, corner handle se resize */
+        .p1-photo {
+            left: var(--p1-photo-l);
+            top: var(--p1-photo-t);
+            width: var(--p1-photo-w);
+            height: var(--p1-photo-h);
+            border: 1px solid #b0b6bd;
+            background: #e8ebef;
+            z-index: 30;
+            cursor: move;
+            touch-action: none;
+        }
+
+        .p1-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .photo-handle {
+            position: absolute;
+            right: -7px;
+            bottom: -7px;
+            width: 16px;
+            height: 16px;
+            background: #e94560;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: nwse-resize;
+            z-index: 5;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .4);
+            display: none;
+        }
+
+        /* sirf hover par dikhe — export (PNG/PDF) mein nahi aata */
+        .p1-photo:hover .photo-handle {
+            display: block;
+        }
+
+        /* Demo Aadhaar number — Page 1 par sirf yahi number (VID nahi) */
+        .p1-uid {
+            left: var(--p1-uid-l);
+            bottom: var(--p1-uid-b);
+            font-size: var(--p1-uid-fs);
+            font-weight: 900;
+            letter-spacing: 2px;
+            line-height: 1.2;
+            white-space: nowrap;
+            font-family: "Noto Serif Tamil", "Latha", "Vijaya", serif;
+        }
+
+        /* =====================================================================
+   PAGE 2 — PRESERVED ORIGINAL STYLE (positions inline text me hain)
+   ===================================================================== */
+        .text {
+            position: absolute;
+            color: #222;
+            font-size: 14px;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        .hindi {
+            font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        /* =====================================================================
+   RIGHT — EDIT PANEL (330px, sticky)
+   ===================================================================== */
+        .panel {
+            width: 330px;
+            /* given fix */
+            min-width: 330px;
+            /* given fix */
+            flex: 0 0 330px;
+            /* given fix */
+            height: 100vh;
+            /* given fix */
+            position: sticky;
+            /* given fix */
+            top: 0;
+            /* given fix */
+            background: #14203c;
+            border-left: 2px solid #0f3460;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .panel h2 {
+            font-size: 14px;
+            color: #e94560;
+            letter-spacing: 1px;
+            margin: 0 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .panel h2 small {
+            display: block;
+            font-size: 9px;
+            color: #7f8db0;
+            letter-spacing: .5px;
+            margin-top: 3px;
+            font-weight: 400;
+            text-transform: none;
+        }
+
+        /* page tabs */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 9px 6px;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            background: #16284a;
+            color: #8fa2c4;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .tab.active {
+            background: #e94560;
+            color: #fff;
+            border-color: #e94560;
+            box-shadow: 0 0 12px rgba(233, 69, 96, .5);
+        }
+
+        .tab:hover {
+            background: #1d3359;
+            color: #fff;
+        }
+
+        .tab.active:hover {
+            background: #ff5a74;
+        }
+
+        /* upload */
+        .upload-zone {
+            border: 2px dashed #e94560;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s;
+            margin-bottom: 12px;
+        }
+
+        .upload-zone:hover {
+            background: rgba(233, 69, 96, .1);
+        }
+
+        .upload-zone .icon {
+            font-size: 26px;
+        }
+
+        .upload-zone p {
+            font-size: 11px;
+            color: #aab5d4;
+            margin: 4px 0 0;
+        }
+
+        .upload-zone .small {
+            font-size: 9px;
+            color: #64718f;
+            margin-top: 4px;
+        }
+
+        #pdfCanvas {
+            width: 100%;
+            border: 1px solid #333;
+            border-radius: 4px;
+            display: none;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #24324f;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #e94560, #ff6b81);
+            border-radius: 3px;
+            transition: width .3s;
+        }
+
+        .status-text {
+            font-size: 10px;
+            color: #e94560;
+            margin-bottom: 8px;
+            display: none;
+            line-height: 1.5;
+        }
+
+        /* fields */
+        .section-title {
+            font-size: 10px;
+            color: #7f8db0;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin: 16px 0 8px;
+            border-bottom: 1px solid #1b2b4d;
+            padding-bottom: 4px;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 9px;
+            color: #8fa2c4;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .field input,
+        .field textarea {
+            width: 100%;
+            padding: 7px 8px;
+            background: #0a1226;
+            border: 1px solid #233255;
+            border-radius: 4px;
+            color: #eee;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: Arial, sans-serif;
+            outline: none;
+            transition: border .2s;
+        }
+
+        .field input:focus,
+        .field textarea:focus {
+            border-color: #e94560;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 46px;
+            line-height: 1.35;
+        }
+
+        .field .hint {
+            font-size: 9px;
+            color: #64718f;
+            margin-top: 2px;
+        }
+
+        /* buttons */
+        .btn-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-red {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .btn-red:hover {
+            background: #ff6b81;
+        }
+
+        .btn-blue {
+            background: #16284a;
+            color: #aab5d4;
+            border: 1px solid #233255;
+        }
+
+        .btn-blue:hover {
+            background: #1d3359;
+            color: #fff;
+        }
+
+        .btn-green {
+            background: #0fae6c;
+            color: #fff;
+        }
+
+        .btn-green:hover {
+            background: #11cc7e;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 2px solid #233255;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .warn-note {
+            font-size: 9px;
+            color: #f5b04c;
+            background: #2a2108;
+            border: 1px solid #4a3c12;
+            border-radius: 4px;
+            padding: 6px 8px;
+            line-height: 1.5;
+            margin-top: 12px;
+        }
+
+        /* =====================================================================
+   CROPPER MODAL — PDF pages se front/back card region select karne ke liye
+   ===================================================================== */
+        .crop-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(8, 12, 25, .88);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .crop-modal-box {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 12px;
+            width: min(980px, 96vw);
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+        }
+
+        .crop-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid #0f3460;
+            color: #e94560;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .crop-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            flex-wrap: wrap;
+        }
+
+        .crop-page-label {
+            color: #aab5d4;
+            font-size: 12px;
+        }
+
+        .chk {
+            color: #aab5d4;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .chk input {
+            accent-color: #e94560;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .crop-stage {
+            position: relative;
+            overflow: auto;
+            background: #0a1226;
+            margin: 0 14px;
+            border: 1px solid #233255;
+            border-radius: 6px;
+            flex: 1;
+            min-height: 200px;
+            white-space: nowrap;
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        .crop-stage canvas {
+            display: block;
+        }
+
+        .crop-page {
+            position: relative;
+            display: inline-block;
+            vertical-align: top;
+            margin: 4px 10px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, .55);
+            background: #101a33;
+        }
+
+        .crop-page-tag {
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            z-index: 5;
+            background: rgba(0, 0, 0, .65);
+            color: #4ecdc4;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .crop-box {
+            position: absolute;
+            border: 2px solid #e94560;
+            box-shadow: 0 0 0 9999px rgba(6, 10, 22, .55);
+            cursor: move;
+            touch-action: none;
+            box-sizing: border-box;
+        }
+
+        .crop-corner {
+            position: absolute;
+            right: -8px;
+            bottom: -8px;
+            width: 18px;
+            height: 18px;
+            background: #e94560;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: nwse-resize;
+        }
+
+        .crop-box-tag {
+            position: absolute;
+            left: 6px;
+            top: 4px;
+            background: #e94560;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px;
+            letter-spacing: .5px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .crop-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-top: 1px solid #0f3460;
+        }
+
+        .crop-btn {
+            padding: 7px 12px;
+            border: none;
+            border-radius: 5px;
+            background: #16284a;
+            color: #aab5d4;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #233255;
+        }
+
+        .crop-btn:hover {
+            background: #1d3359;
+            color: #fff;
+        }
+
+        .crop-btn.accent {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .crop-btn.accent:hover {
+            background: #ff5a74;
+        }
+
+        .crop-btn.accent2 {
+            background: #0fae6c;
+            color: #fff;
+        }
+
+        .crop-btn.accent2:hover {
+            background: #11cc7e;
+        }
+
+        /* =====================================================================
+   A4 VIEW — dono cards ek row (front | back), jaise aadhaar
+   ===================================================================== */
+        body.a4mode .card-wrapper {
+            overflow: visible;
+        }
+
+        body.a4mode #cardsStack {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 22px;
+        }
+
+        body.a4mode .card {
+            margin: 0;
+        }
+
+        body.a4mode .card.current {
+            outline: none;
+        }
+
+        body.a4mode #cardsStack {
+            zoom: var(--card-zoom, 1);
+        }
+
+        /* =====================================================================
+   PRINT — A4 portrait (vertical) page, A4 View jaisa hi front|back side by side
+   ===================================================================== */
+        @page {
+            size: A4 portrait;
+            margin: 6mm;
+        }
+
+        @media print {
+            body {
+                background: #fff !important;
+            }
+
+            .panel {
+                display: none !important;
+            }
+
+            .crop-modal {
+                display: none !important;
+            }
+
+            .card-wrapper {
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            #cardsStack {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: center;
+                align-items: center;
+                gap: 20px !important;
+                zoom: .42 !important;
+            }
+
+            .card {
+                margin: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            .card.current {
+                outline: none !important;
+                box-shadow: none !important;
+            }
+        }
+
+        /* =====================================================================
+   A4 EXPORT — PNG/PDF download ke liye front|back ek row (A4 view jaisa)
+   ===================================================================== */
+        body.exportRow #cardsStack {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* ==== responsive (1): cards upar, panel neeche — tablets & phones ==== */
+        @media (max-width: 1120px) {
+            body {
+                flex-direction: column;
+            }
+
+            .card-wrapper {
+                order: 1;
+                overflow: visible;
+                padding: 16px 12px;
+            }
+
+            .panel {
+                order: 2;
+                width: 100%;
+                min-width: 0;
+                flex: 0 0 auto;
+                height: auto;
+                max-height: none;
+                position: static;
+                /* sticky hatao — editor neeche aa jaata hai */
+                border-left: none;
+                border-top: 2px solid #0f3460;
+                padding: 14px;
+            }
+        }
+
+        /* ==== responsive (2): phone-specific — bade touch targets, readable text,
+               iOS par input focus hone par page auto-zoom na ho ==== */
+        @media (max-width: 640px) {
+            .card-wrapper {
+                padding: 10px 8px;
+            }
+
+            .panel {
+                padding: 12px;
+            }
+
+            .panel h2 {
+                font-size: 16px;
+            }
+
+            .tabs {
+                gap: 8px;
+            }
+
+            .tab {
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+
+            .upload-zone {
+                padding: 18px 12px;
+            }
+
+            .upload-zone .icon {
+                font-size: 32px;
+            }
+
+            .upload-zone p {
+                font-size: 13px;
+            }
+
+            .upload-zone .small {
+                font-size: 10px;
+            }
+
+            .section-title {
+                font-size: 12px;
+                margin: 14px 0 8px;
+            }
+
+            .field label {
+                font-size: 11px;
+            }
+
+            .field input,
+            .field textarea {
+                font-size: 16px;
+                /* 16px+ iOS par auto-zoom rokta hai */
+                padding: 11px 10px;
+            }
+
+            .field .hint {
+                font-size: 10px;
+            }
+
+            .btn-row {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 13px 8px;
+                font-size: 13px;
+            }
+
+            .status-text {
+                font-size: 12px;
+            }
+
+            .warn-note {
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+
+            /* ---- cropper modal ko phone par full-screen banao ---- */
+            .crop-modal {
+                padding: 6px;
+            }
+
+            .crop-modal-box {
+                width: 100%;
+                max-height: 97vh;
+                border-radius: 8px;
+            }
+
+            .crop-head {
+                font-size: 13px;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 8px 10px;
+            }
+
+            .crop-tools {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 8px 10px;
+            }
+
+            .crop-page-label {
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .crop-btn {
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+
+            .crop-foot {
+                flex-direction: column;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .crop-foot .crop-btn {
+                width: 100%;
+            }
+        }
+
+        /* bahut chhoti screens (<=360px) par aur compact */
+        @media (max-width: 360px) {
+            .card-wrapper {
+                padding: 6px 4px;
+            }
+
+            .panel {
+                padding: 10px;
+            }
+
+            .btn-row {
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                flex: 1 1 45%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================== LEFT : CARDS ============================== -->
+    <div class="card-wrapper">
+        <div id="cardsStack">
+
+            <!-- ========== PAGE 1 (FRONT) — background image + adjustable overlays ========== -->
+            <div class="card p1card" id="cardPage1">
+                <img src="page1.PNG" alt="Demo ID Card — Page 1"
+                    onerror="this.alt='page1.PNG missing';this.style.minHeight='120px';this.style.background='#fff';">
+
+
+                <!-- Photo — sab se pahle (drag karke move, corner se resize) -->
+                <div class="p1 p1-photo" id="p1PhotoBox" title="Photo drag karke move karein">
+                    <img id="p1Photo" alt="Photo"
+                        src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='170' height='195'%3E%3Crect width='100%25' height='100%25' fill='%23dfe4ea'/%3E%3Crect x='7' y='7' width='156' height='181' fill='none' stroke='%23989fac' stroke-dasharray='6 5'/%3E%3Ctext x='50%25' y='48%25' font-family='Arial' font-size='15' fill='%236f7884' text-anchor='middle'%3EPHOTO%3C/text%3E%3C/svg%3E">
+                    <div class="photo-handle" id="p1PhotoHandle"></div>
+                </div>
+
+                <!-- "Aadhaar no. issued" — VERTICAL, same jaise Page 2 ka "Details as on" -->
+                <div class="p1 p1-issued" id="p1Issued">Aadhaar no. issued: 29/05/2015</div>
+
+                <!-- Name / DOB / Gender — front design overlays (adjustable vars) -->
+                <div class="p1 p1-name-hi" id="p1NameHi">रमेश कुमार</div>
+                <div class="p1 p1-name-en" id="p1NameEn">Ramesh Kumar</div>
+                <div class="p1 p1-dob" id="p1Dob">जन्म तिथि / DOB: 02/06/2002</div>
+                <div class="p1 p1-gender" id="p1Gender">पुरुष / MALE</div>
+
+                <!-- Demo Aadhaar number — Page 1 par srif yahi number (VID nahi hai) -->
+                <div class="p1 p1-uid" id="p1Uid">XXXX XXXX XXXX</div>
+            </div>
+
+            <!-- ========== PAGE 2 (BACK) — EXISTING DESIGN 100% PRESERVED ========== -->
+            <div class="card" id="cardPage2">
+                <img src="page2.PNG" alt="Demo ID Card — Page 2"
+                    onerror="this.alt='page2.PNG missing';this.style.minHeight='120px';this.style.background='#fff';">
+
+
+                <!-- VERTICAL ADDRESS LABEL (original inline coordinates — unchanged) -->
+                <div id="prevDetails" class="vertical-address" style="
+              position:absolute;
+              left:30px;
+              top:100px;
+              height:210px;
+              writing-mode:vertical-rl;
+              transform:rotate(180deg);
+              font-family:'Noto Sans Devanagari',Arial,Helvetica,sans-serif;
+              font-size:13px;
+              font-weight:bold;
+              color:#333;
+              letter-spacing:0px;
+              z-index:5;
+          ">
+                    Details as on: 29/07/2026
+                </div>
+
+                <!-- ADDRESS GROUP (original inline coordinates — unchanged) -->
+                <div class="address-group" style="
+              position:absolute;
+              left:55px;
+              top:120px;
+              width:400px;
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+          ">
+                    <!-- HINDI ADDRESS -->
+                    <div id="prevAddrHi" class="text hindi" style="
+                position:relative;
+                left:0;
+                top:0;
+                width:100%;
+                line-height:1.2;
+                font-weight:500;
+            ">
+                        पता: <br>
+                        अर्धांगिनी: हरिश्चन्द्र, ग्राम-गोगाँव, पोस्ट-गोगाँव, खैरा, जिगना आर.एस. मिर्जापुर,<br>
+                        उत्तर प्रदेश - 231313
+                    </div>
+
+                    <!-- ENGLISH ADDRESS -->
+                    <div id="prevAddrEn" class="text" style="
+                position:relative;
+                left:0;
+                top:0;
+                width:100%;
+                line-height:1.2;
+                font-family:'Noto Serif Tamil','Latha','Vijaya',serif;
+                font-size:14px;
+                font-weight:500;
+            ">
+                        Address: <br>
+                        W/O: Harshchand, Gram-Goganv, Post-Goganv, Khaira, PO: Jigna Rs, DIST: Mirzapur,<br>
+                        Uttar Pradesh - 231313
+                    </div>
+                </div>
+
+                <!-- DEMO NUMBER (original inline coordinates — unchanged) -->
+                <div id="prevAadhaar" class="text demo-id" style="
+              left:245px;
+              bottom:75px;
+              font-size:32px;
+              font-weight:900;
+              letter-spacing:2px;
+              line-height:1.2;
+              font-family:'Noto Serif Tamil','Latha','Vijaya',serif;
+              color:#222;
+          ">
+                    XXXX XXXX XXXX
+                </div>
+
+                <!-- DEMO VID (original inline coordinates — unchanged) -->
+                <div id="prevVid" class="text id-number" style="
+              left:245px;
+              bottom:55px;
+              font-family:'Noto Serif Tamil','Latha','Vijaya',serif;
+              font-weight:900;
+              font-size:20px;
+              color:#222;
+          ">
+                    VID: XXXX XXXX XXXX XXXX
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================== RIGHT : EDIT PANEL ============================== -->
+    <div class="panel">
+        <h2>🪪 AADHAAR EDITOR <small>FICTIONAL / DEMO — koi real ID nahi</small></h2>
+
+        <!-- Page switching tabs -->
+        <div class="tabs">
+            <button class="tab active" id="tabPage1" onclick="setPage(1)">📄 Page 1</button>
+            <button class="tab" id="tabPage2" onclick="setPage(2)">📄 Page 2</button>
+        </div>
+
+        <!-- PDF Upload -->
+        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+            <div class="icon">📄</div>
+            <p><b>PDF Upload karein</b></p>
+            <p class="small">Upload → Crop → OCR → Page 1 &amp; Page 2 auto fill</p>
+        </div>
+        <input type="file" id="fileInput" accept="application/pdf,image/*" style="display:none;">
+
+        <canvas id="pdfCanvas"></canvas>
+        <div class="progress-bar" id="progressBar">
+            <div class="fill" id="progressFill"></div>
+        </div>
+        <div class="status-text" id="statusText"></div>
+
+        <!-- Photo upload (Page 1) -->
+        <div class="field">
+            <label>📷 Photo (Page 1)</label>
+            <div class="btn-row">
+                <button class="btn btn-blue" onclick="document.getElementById('photoInput').click()">📷 Upload
+                    Photo</button>
+                <button class="btn btn-red" onclick="resetPhoto()">✖ Remove</button>
+            </div>
+            <input type="file" id="photoInput" accept="image/*" style="display:none;">
+            <div class="hint">Card par photo ko drag karke move karo, corner handle se size badalo — export mein bhi
+                save rehta hai</div>
+        </div>
+
+        <!-- Editor fields -->
+        <div class="section-title">Editable Fields</div>
+
+        <div class="field">
+            <label>📝 नाम (Name — Hindi)</label>
+            <input type="text" id="nameHi" value="रमेश कुमार" oninput="updateCard()">
+        </div>
+
+        <div class="field">
+            <label>📝 Name (English)</label>
+            <input type="text" id="nameEn" value="Ramesh Kumar" oninput="updateCard()">
+            <button class="btn btn-blue" style="margin-top:8px;padding:9px 12px;font-size:13px;width:100%"
+                onclick="convertNameToHindi()">🔁 English → हिंदी नाम</button>
+        </div>
+
+        <div class="field">
+            <label>🎂 जन्म तिथि / DOB</label>
+            <input type="text" id="dob" value="जन्म तिथि / DOB: 02/06/2002" oninput="updateCard()">
+        </div>
+
+        <div class="field">
+            <label>🚻 Gender</label>
+            <input type="text" id="gender" value="पुरुष / MALE" oninput="updateCard()">
+        </div>
+
+        <div class="field">
+            <label>🗓️ Aadhaar no. issued (vertical)</label>
+            <input type="text" id="issuedOn" value="Aadhaar no. issued: 29/05/2015" oninput="updateCard()">
+        </div>
+
+        <div class="field">
+            <label>📅 Details as on</label>
+            <input type="text" id="detailsOn" value="Details as on: 29/07/2026" oninput="updateCard()">
+        </div>
+
+        <div class="field">
+            <label>📍 पता (Hindi Address)</label>
+            <textarea id="addressHi" oninput="updateCard()">पता:
+अर्धांगिनी: हरिश्चन्द्र, ग्राम-गोगाँव, पोस्ट-गोगाँव, खैरा, जिगना आर.एस. मिर्जापुर,
+उत्तर प्रदेश - 231313</textarea>
+        </div>
+
+        <div class="field">
+            <label>📍 Address (English)</label>
+            <textarea id="addressEn" oninput="updateCard()">Address:
+W/O: Harshchand, Gram-Goganv, Post-Goganv, Khaira, PO: Jigna Rs, DIST: Mirzapur,
+Uttar Pradesh - 231313</textarea>
+        </div>
+
+        <div class="field">
+            <label>🔢 Demo ID Number</label>
+            <input type="text" id="aadhaarNo" value="XXXX XXXX XXXX" maxlength="15"
+                oninput="formatAadhaar(this);updateCard()">
+            <div class="hint">Sirf demo/masked value — X ya digits (4-4-4 format)</div>
+        </div>
+
+        <div class="field">
+            <label>🔢 Demo VID Number</label>
+            <input type="text" id="vidNo" value="XXXX XXXX XXXX XXXX" maxlength="20"
+                oninput="formatVID(this);updateCard()">
+            <div class="hint">Sirf demo/masked value — X ya digits (4x4 format)</div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+            <button class="btn btn-red" onclick="document.getElementById('fileInput').click()">📤 Upload</button>
+            <button class="btn btn-blue" onclick="openCropper()">✂️ Re-Crop</button>
+            <button class="btn btn-blue" onclick="clearAll()">🗑️ Clear</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-green" onclick="downloadImage()">🖼️ PNG Download</button>
+            <button class="btn btn-red" onclick="downloadPDF()">📄 PDF Download</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-blue" onclick="toggleA4()">🅰️ A4 View</button>
+            <button class="btn btn-green" onclick="printPage()">🖨️ Print</button>
+        </div>
+
+        <div class="warn-note">
+            ⚠️ <b>Demo tool:</b> OCR se real government-ID numbers copy nahi hote.
+            Number fields hamesha masked ({XXXX}) demo values par hote hain.
+            Downloaded output par <b>SAMPLE / DEMO</b> watermark lagta hai.
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- CROPPER MODAL — PDF page se front/back card region select karo -->
+    <!-- ============================================================== -->
+    <div class="crop-modal" id="cropModal">
+        <div class="crop-modal-box">
+            <div class="crop-head">
+                <span id="cropTitle">✂️ Crop — Zaruri Hissa Select Karo</span>
+                <button class="crop-btn" onclick="closeCropper()">✖ Close</button>
+            </div>
+            <div class="crop-tools">
+                <span class="crop-page-label">🔴 <b>Ek hi box</b> mein dono cards (front + back) rakho — data ek saath
+                    extract hoga, Page 1 &amp; Page 2 dono update honge.</span>
+                <span style="flex:1"></span>
+                <button class="crop-btn accent" onclick="cropAndExtract()">✂️ OCR se Data Nikalo (Page 1 + 2)</button>
+            </div>
+            <div class="crop-stage" id="cropStage"></div>
+            <div class="crop-foot">
+                <button class="crop-btn accent2" onclick="cropAndExtract()">✔ Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+           PAGE SWITCHING — selected page ka preview highlight hota hai
+           ===================================================================== */
+        function setPage(n) {
+            var c1 = el('cardPage1'), c2 = el('cardPage2');
+            var t1 = el('tabPage1'), t2 = el('tabPage2');
+
+            if (c1) c1.classList.toggle('current', n === 1);
+            if (c2) c2.classList.toggle('current', n === 2);
+            if (t1) t1.classList.toggle('active', n === 1);
+            if (t2) t2.classList.toggle('active', n === 2);
+
+            var target = n === 1 ? c1 : c2;
+            if (target && document.body.offsetWidth > 1120) {
+                setTimeout(function () { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+            }
+        }
+
+        /* =====================================================================
+           SAFE HELPERS — missing elements par koi JS error nahi
+           ===================================================================== */
+        function el(id) { return document.getElementById(id); }
+        function val(id) { var e = el(id); return e ? e.value : ''; }
+        function setText(id, t) { var e = el(id); if (e) e.textContent = t; }
+        function setHTML(id, h) { var e = el(id); if (e) e.innerHTML = h; }
+        function setInputVal(id, v) {
+            var e = el(id);
+            if (!e || v == null || String(v).trim() === '') return;
+            e.value = v;
+        }
+
+        /* =====================================================================
+           LIVE UPDATE — dono pages ke overlays turant update
+           ===================================================================== */
+        function updateCard() {
+            var details = val('detailsOn');
+            var hi = val('addressHi').replace(/\n/g, '<br>') || '';
+            var en = val('addressEn').replace(/\n/g, '<br>') || '';
+            var uid = val('aadhaarNo');
+            var vid = 'VID: ' + val('vidNo');
+
+            /* ---- Page 1 overlays (front) — sirf Aadhaar number, VID nahi ---- */
+            setText('p1Issued', val('issuedOn'));
+            setText('p1NameHi', val('nameHi'));
+            setText('p1NameEn', val('nameEn'));
+            setText('p1Dob', val('dob'));
+            setText('p1Gender', val('gender'));
+            setText('p1Uid', uid);
+
+            /* ---- Page 2 overlays (back) — same relative positions preserved ---- */
+            setText('prevDetails', details);
+            setHTML('prevAddrHi', hi);
+            setHTML('prevAddrEn', en);
+            setText('prevAadhaar', uid);
+            setText('prevVid', vid);
+        }
+
+        /* =====================================================================
+           ENGLISH → HINDI NAME TRANSLITERATION
+           (common Indian names ke liye dictionary + rule-based fallback)
+           ===================================================================== */
+        var HINDI_NAME_DICT = {
+            ramesh: 'रमेश', kumar: 'कुमार', suresh: 'सुरेश', mahesh: 'महेश', rajesh: 'राजेश',
+            rakesh: 'राकेश', naresh: 'नरेश', dinesh: 'दिनेश', mukesh: 'मुकेश', yogesh: 'योगेश',
+            ram: 'राम', shyam: 'श्याम', mohan: 'मोहन', sohan: 'सोहन', rohan: 'रोहन', rahul: 'राहुल',
+            raj: 'राज', raja: 'राजा', arjun: 'अर्जुन', amit: 'अमित', sumit: 'सुमित', anil: 'अनिल',
+            sunil: 'सुनील', sanjay: 'संजय', vijay: 'विजय', ajay: 'अजय', ashok: 'अशोक', arun: 'अरुण',
+            varun: 'वरुण', karan: 'करण', kapil: 'कपिल', vikas: 'विकास', vishal: 'विशाल',
+            manish: 'मनीष', nitin: 'नितिन', nikhil: 'निखिल', rohit: 'रोहित', ravi: 'रवि',
+            deepak: 'दीपक', dilip: 'दिलीप', girish: 'गिरीश', harish: 'हरीश', jagdish: 'जगदीश',
+            kamal: 'कमल', lalit: 'ललित', manoj: 'मनोज', narendra: 'नरेंद्र', pankaj: 'पंकज',
+            prakash: 'प्रकाश', rajiv: 'राजीव', sandeep: 'संदीप', sanjeev: 'संजीव', satish: 'सतीश',
+            shiv: 'शिव', suraj: 'सूरज', tarun: 'तरुण', vikram: 'विक्रम', vinod: 'विनोद', yash: 'यश',
+            priya: 'प्रिया', pooja: 'पूजा', puja: 'पूजा', neha: 'नेहा', kavita: 'कविता',
+            sunita: 'सुनीता', rekha: 'रेखा', geeta: 'गीता', gita: 'गीता', meena: 'मीना',
+            rani: 'रानी', devi: 'देवी', anita: 'अनिता', mamta: 'ममता', seema: 'सीमा',
+            ritu: 'ऋतु', nisha: 'निशा', asha: 'आशा', radha: 'राधा', sita: 'सीता',
+            lakshmi: 'लक्ष्मी', sarita: 'सरिता', shalini: 'शालिनी', divya: 'दिव्या',
+            singh: 'सिंह', sharma: 'शर्मा', verma: 'वर्मा', gupta: 'गुप्ता', yadav: 'यादव',
+            mishra: 'मिश्रा', rao: 'राव', reddy: 'रेड्डी', nair: 'नायर', patel: 'पटेल',
+            shah: 'शाह', jain: 'जैन', das: 'दास', khan: 'खान', ansari: 'अंसारी', thakur: 'ठाकुर',
+            chauhan: 'चौहान', rathore: 'राठौर', pandey: 'पांडेय', tiwari: 'तिवारी', dubey: 'दुबे',
+            srivastava: 'श्रीवास्तव', agarwal: 'अग्रवाल', agrawal: 'अग्रवाल', joshi: 'जोशी',
+            trivedi: 'त्रिवेदी', dwivedi: 'द्विवेदी', saxena: 'सक्सेना', kapoor: 'कपूर',
+            prasad: 'प्रसाद', lal: 'लाल', baba: 'बाबा', swami: 'स्वामी', pandit: 'पंडित'
+        };
+
+        function translitWordToHindi(word) {
+            var w = String(word).toLowerCase();
+            if (!w) return '';
+            if (HINDI_NAME_DICT[w]) return HINDI_NAME_DICT[w];
+
+            var cons = {
+                'ksh': 'क्ष', 'sch': 'श', 'chh': 'छ', 'sh': 'श', 'ch': 'च',
+                'kh': 'ख', 'gh': 'घ', 'th': 'थ', 'dh': 'ध', 'ph': 'फ', 'bh': 'भ',
+                'jh': 'झ', 'zh': 'झ', 'gn': 'ज्ञ',
+                'k': 'क', 'q': 'क़', 'g': 'ग', 'c': 'क', 'j': 'ज', 'z': 'ज़',
+                't': 'त', 'd': 'द', 'n': 'न', 'p': 'प', 'f': 'फ', 'b': 'ब',
+                'm': 'म', 'y': 'य', 'r': 'र', 'l': 'ल', 'v': 'व', 'w': 'व',
+                's': 'स', 'h': 'ह', 'x': 'क्स'
+            };
+            var vDig = {
+                'aa': ['आ', 'ा'], 'ai': ['ऐ', 'ै'], 'au': ['औ', 'ौ'], 'ee': ['ई', 'ी'],
+                'oo': ['ऊ', 'ू'], 'ea': ['ई', 'ी'], 'ou': ['औ', 'ौ'], 'oa': ['ओ', 'ो']
+            };
+            var vSht = { 'a': ['अ', ''], 'i': ['इ', 'ि'], 'u': ['उ', 'ु'], 'e': ['ए', 'े'], 'o': ['ओ', 'ो'] };
+
+            var out = '', i = 0, n = w.length, afterCons = false;
+            while (i < n) {
+                var ch = w[i];
+                if (!/[a-z]/.test(ch)) { out += ch; i++; afterCons = false; continue; }
+
+                var cm = null, cl = 0;
+                for (var L = 3; L >= 1; L--) {
+                    var sub = w.substr(i, L);
+                    if (cons[sub]) { cm = cons[sub]; cl = L; break; }
+                }
+                if (cm) {
+                    out += cm; i += cl;
+                    var nxt = w[i], vowelNext = false;
+                    if (nxt) {
+                        if (vDig[w.substr(i, 2)]) vowelNext = true;
+                        else if (vSht[nxt] !== undefined) vowelNext = true;
+                    }
+                    if (nxt && /[a-z]/.test(nxt) && !vowelNext) out += '्';
+                    afterCons = true;
+                    continue;
+                }
+                var v2 = w.substr(i, 2);
+                if (vDig[v2]) {
+                    out += afterCons ? vDig[v2][1] : vDig[v2][0];
+                    i += 2; afterCons = false; continue;
+                }
+                if (vSht[ch] !== undefined) {
+                    if (ch === 'a') { if (!afterCons) out += vSht['a'][0]; }
+                    else out += afterCons ? vSht[ch][1] : vSht[ch][0];
+                    i++; afterCons = false; continue;
+                }
+                out += ch; i++; afterCons = false;
+            }
+            return out;
+        }
+
+        function translitToHindi(text) {
+            if (!text) return '';
+            var s = String(text);
+            if (!/[A-Za-z]/.test(s)) return s;
+            return s.replace(/[A-Za-z]+/g, function (w) { return translitWordToHindi(w); });
+        }
+
+        /* Panel button: English name → Hindi name */
+        function convertNameToHindi() {
+            var en = val('nameEn');
+            if (!en || !/[A-Za-z]/.test(en)) {
+                showProgress('⚠️ Pehle English name likhein.');
+                return;
+            }
+            var e = el('nameHi');
+            if (e) e.value = translitToHindi(en);
+            updateCard();
+            showProgress('✅ Hindi naam English se convert ho gaya (chahein to edit kar lein).');
+        }
+
+        /* =====================================================================
+           FORMAT — digits ya X ko groups of 4 me format karta hai
+           ===================================================================== */
+        function formatAadhaar(inputEl) {
+            var v = inputEl.value.replace(/[^\dXx]/g, '').toUpperCase().substring(0, 12);
+            inputEl.value = v.replace(/([0-9X]{4})(?=[0-9X])/g, '$1 ');
+        }
+        function formatVID(inputEl) {
+            var v = inputEl.value.replace(/[^\dXx]/g, '').toUpperCase().substring(0, 16);
+            inputEl.value = v.replace(/([0-9X]{4})(?=[0-9X])/g, '$1 ');
+        }
+
+        /* =====================================================================
+           PDF.js SETUP
+           ===================================================================== */
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        var fileInput = el('fileInput');
+        var canvas = el('pdfCanvas');
+        var ctx = null;
+        if (canvas) ctx = canvas.getContext('2d');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                if (e.target.files && e.target.files.length) handleFile(e.target.files[0]);
+            });
+        }
+
+        /* =====================================================================
+           PHOTO (Page 1) — upload / remove
+           ===================================================================== */
+        var PHOTO_PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'170\' height=\'195\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%23dfe4ea\'/%3E%3Crect x=\'7\' y=\'7\' width=\'156\' height=\'181\' fill=\'none\' stroke=\'%23989fac\' stroke-dasharray=\'6 5\'/%3E%3Ctext x=\'50%25\' y=\'48%25\' font-family=\'Arial\' font-size=\'15\' fill=\'%236f7884\' text-anchor=\'middle\'%3EPHOTO%3C/text%3E%3C/svg%3E';
+
+        var photoInput = el('photoInput');
+        if (photoInput) {
+            photoInput.addEventListener('change', function (e) {
+                var f = e.target.files && e.target.files[0];
+                if (!f) return;
+                var r = new FileReader();
+                r.onload = function () {
+                    var p = el('p1Photo');
+                    if (p) p.src = r.result;
+                };
+                r.readAsDataURL(f);
+            });
+        }
+
+        function resetPhoto() {
+            var p = el('p1Photo');
+            if (p) p.src = PHOTO_PLACEHOLDER;
+            if (photoInput) photoInput.value = '';
+        }
+
+        /* =====================================================================
+           PHOTO DRAG/RESIZE — photo ko card par khinch kar move karo,
+           corner handle se size banao. Result CSS variables --p1-photo-* par
+           set hota hai, isliye export (PNG/PDF) mein bhi wahi position aati hai.
+           ===================================================================== */
+        function initPhotoDrag() {
+            var box = el('p1PhotoBox'), handle = el('p1PhotoHandle');
+            if (!box || !handle) return;
+
+            var mode = null, sx = 0, sy = 0, baseL = 0, baseT = 0, baseW = 0, baseH = 0;
+
+            function start(e, m) {
+                mode = m;
+                sx = e.clientX; sy = e.clientY;
+                var cs = getComputedStyle(box);
+                baseL = parseFloat(cs.left) || 0;
+                baseT = parseFloat(cs.top) || 0;
+                baseW = box.offsetWidth || 235;
+                baseH = box.offsetHeight || 305;
+                try { box.setPointerCapture(e.pointerId); } catch (err) { }
+                if (e.preventDefault) e.preventDefault();
+            }
+
+            box.addEventListener('pointerdown', function (e) {
+                if (e.target === handle) return;
+                start(e, 'move');
+            });
+            handle.addEventListener('pointerdown', function (e) {
+                e.stopPropagation();
+                start(e, 'resize');
+            });
+            box.addEventListener('pointermove', function (e) {
+                if (!mode) return;
+                var dx = e.clientX - sx, dy = e.clientY - sy;
+                if (mode === 'move') {
+                    var l = Math.max(0, Math.round(baseL + dx));
+                    var t = Math.max(0, Math.round(baseT + dy));
+                    box.style.setProperty('--p1-photo-l', l + 'px');
+                    box.style.setProperty('--p1-photo-t', t + 'px');
+                } else {
+                    var w = Math.max(40, Math.round(baseW + dx));
+                    var h = Math.max(40, Math.round(baseH + dy));
+                    box.style.setProperty('--p1-photo-w', w + 'px');
+                    box.style.setProperty('--p1-photo-h', h + 'px');
+                }
+            });
+            function end() { mode = null; }
+            box.addEventListener('pointerup', end);
+            box.addEventListener('pointercancel', end);
+        }
+        initPhotoDrag();
+
+        /* =====================================================================
+           CROPPER — PDF ke saare pages ek sath (horizontal) — har page par apna
+           crop box. "Card 1" = left/top page ka box, "Card 2" = right page ka box.
+           ===================================================================== */
+        var pdfPageCanvases = [];   /* rendered PDF pages (natural pixels) */
+        var pdfPageTexts = [];      /* direct PDF text per page (PDF.js getTextContent) */
+        var pdfPageTextItems = [];  /* PDF text items + canvas coords (crop filter ke liye) */
+        var cropBoxes = [];         /* {cv, wrap, box, handle, dispW, dispH} */
+        var cropExtractBusy = false;
+
+        /* Auto-photo region — cropped FRONT card par photo top-right aadhaar style
+           (normalized 0..1). Apne design se match nahi kare to values badlo. */
+        function openCropper() {
+            var m = el('cropModal');
+            if (!m || !pdfPageCanvases.length) { alert('Pehle PDF upload karein!'); return; }
+            buildCropStage();
+            m.style.display = 'flex';
+        }
+
+        function closeCropper() {
+            var m = el('cropModal');
+            if (m) m.style.display = 'none';
+        }
+
+        function buildCropStage() {
+            var stage = el('cropStage');
+            if (!stage) return;
+            if (stage.innerHTML) stage.innerHTML = '';
+            cropBoxes = [];
+
+            var availH = Math.max(300, (window.innerHeight || 700) - 250);
+
+            for (var i = 0; i < pdfPageCanvases.length; i++) {
+                var cv = pdfPageCanvases[i];
+
+                /* page ko stage height mein fit karo */
+                var kk = availH / cv.height;
+                if (kk > 1.25) kk = 1.25;
+                var dispW = Math.max(120, Math.round(cv.width * kk));
+                var dispH = Math.round(cv.height * kk);
+
+                /* wrapper */
+                var wrap = document.createElement('div');
+                wrap.className = 'crop-page';
+                wrap.style.width = dispW + 'px';
+                wrap.style.height = dispH + 'px';
+
+                /* page image */
+                var cvs = document.createElement('canvas');
+                cvs.width = cv.width; cvs.height = cv.height;
+                cvs.getContext('2d').drawImage(cv, 0, 0);
+                cvs.style.width = dispW + 'px';
+                cvs.style.height = dispH + 'px';
+                cvs.style.display = 'block';
+                wrap.appendChild(cvs);
+
+                /* page label */
+                var tag = document.createElement('div');
+                tag.className = 'crop-page-tag';
+                tag.textContent = 'Page ' + (i + 1);
+                wrap.appendChild(tag);
+
+                /* Ek PDF page = ek hi crop box (dono sides isi ke andar) */
+                var ar = autoCropRegion(cv);
+                cropBoxes.push(addCropBox(wrap, cv, dispW, dispH, ar, 'Front + Back (dono cards)', i, 0));
+
+                stage.appendChild(wrap);
+            }
+
+            var ttl = el('cropTitle');
+            if (ttl) ttl.textContent = '✂️ Ek box mein dono cards select karo (front + back)';
+        }
+
+        function addCropBox(wrap, cv, dispW, dispH, region, label, pdfPageIdx, cardTarget) {
+            var box = document.createElement('div');
+            box.className = 'crop-box';
+            var hnd = document.createElement('div');
+            hnd.className = 'crop-corner';
+            box.appendChild(hnd);
+            if (label) {
+                var bTag = document.createElement('div');
+                bTag.className = 'crop-box-tag';
+                bTag.textContent = label;
+                box.appendChild(bTag);
+            }
+            if (pdfPageIdx == null) pdfPageIdx = 0;
+            if (cardTarget == null) cardTarget = 0;
+
+            var sk = cv.width / dispW;
+            var bx, by, bw, bh;
+            if (region) {
+                bx = Math.round(region.x / sk); by = Math.round(region.y / sk);
+                bw = Math.round(region.w / sk); bh = Math.round(region.h / sk);
+                bx = Math.max(0, Math.min(bx, dispW - 80)); by = Math.max(0, Math.min(by, dispH - 80));
+                bw = Math.max(80, Math.min(bw, dispW - bx)); bh = Math.max(80, Math.min(bh, dispH - by));
+            } else {
+                bw = Math.round(dispW * 0.92); bh = Math.round(dispH * 0.86);
+                bx = Math.round((dispW - bw) / 2); by = Math.round((dispH - bh) / 2);
+            }
+            box.style.left = bx + 'px';
+            box.style.top = by + 'px';
+            box.style.width = bw + 'px';
+            box.style.height = bh + 'px';
+
+            attachCropDrag(box, hnd, dispW, dispH);
+            wrap.appendChild(box);
+            return { cv: cv, box: box, dispW: dispW, dispH: dispH, pdfPageIdx: pdfPageIdx, cardTarget: cardTarget };
+        }
+
+        function attachCropDrag(box, hnd, dispW, dispH) {
+            var mode = null, sx = 0, sy = 0, bx = 0, by = 0, bw = 0, bh = 0;
+
+            function start(e, m) {
+                mode = m; sx = e.clientX; sy = e.clientY;
+                bx = box.offsetLeft; by = box.offsetTop;
+                bw = box.offsetWidth; bh = box.offsetHeight;
+                try { box.setPointerCapture(e.pointerId); } catch (err) { }
+                if (e.preventDefault) e.preventDefault();
+            }
+            box.addEventListener('pointerdown', function (e) {
+                if (e.target === hnd) return;
+                start(e, 'move');
+            });
+            hnd.addEventListener('pointerdown', function (e) {
+                e.stopPropagation();
+                start(e, 'resize');
+            });
+            box.addEventListener('pointermove', function (e) {
+                if (!mode) return;
+                var dx = e.clientX - sx, dy = e.clientY - sy;
+                if (mode === 'move') {
+                    var l = Math.max(0, Math.min(bx + dx, dispW - bw));
+                    var t = Math.max(0, Math.min(by + dy, dispH - bh));
+                    box.style.left = l + 'px'; box.style.top = t + 'px';
+                } else {
+                    var w = Math.max(60, Math.min(bw + dx, dispW - bx));
+                    var h = Math.max(60, Math.min(bh + dy, dispH - by));
+                    box.style.width = w + 'px'; box.style.height = h + 'px';
+                }
+            });
+            function end() { mode = null; }
+            box.addEventListener('pointerup', end);
+            box.addEventListener('pointercancel', end);
+        }
+
+        /* Crop → OCR/text → saare side inputs + Page1 & Page2 (sirf text, image nahi) */
+        function fillFromExtractedText(text) {
+            if (!text || !text.replace(/\s/g, '').length) return false;
+            parseOCR(text);
+            updateCard();
+            return true;
+        }
+
+        async function extractFromCrop(item) {
+            var rect = rectOfItem(item);
+            if (!rect) return false;
+
+            var fullCv = cropToCanvas(item.cv, rect.x, rect.y, rect.w, rect.h, 1612);
+            var parts = [];
+            var pdfPartOk = false;
+
+            if (pdfPageTextItems.length) {
+                var pdfPart = extractPdfTextInRect(0, rect, item.cv);
+                if (pdfPart.replace(/\s/g, '').length > 2) {
+                    /* Check if pdfPart is usable (>=2 valid non-garbled lines) — agar direct text valid hai
+                       to OCR MAT CHALAO: OCR card image se static banners/taglines/disclaimers utha le
+                       jaate hain (जैसे "आधार पहचान का प्रमाण है", "Government of India" footer, QR code
+                       text etc.) jo actual PDF embedded text mein nahi hote. */
+                    var pl = pdfPart.split(/\n/).map(_cleanLine).filter(function (s) { return s && s.length >= 4 && !_isGarbled(s); });
+                    if (pl.length >= 2) {
+                        parts.push(pdfPart);
+                        pdfPartOk = true;
+                    } else {
+                        /* direct text kam hai ya garbled (PUA wale PDFs mein) — to OCR use karo */
+                        parts.push(pdfPart);
+                    }
+                }
+            }
+
+            if (!pdfPartOk) {
+                showProgress('OCR chal raha hai (crop area)...');
+                updateProgress(40);
+                try {
+                    var ocrPart = await ocrCanvas(fullCv);
+                    if (ocrPart.replace(/\s/g, '').length > 2) parts.push(ocrPart);
+                } catch (err) { }
+            } else {
+                showProgress('PDF direct text se data extract ho raha hai (fast)...');
+                updateProgress(80);
+            }
+
+            return fillFromExtractedText(parts.join('\n'));
+        }
+
+        function rectOfItem(item) {
+            if (!item) return null;
+            var cv = item.cv, box = item.box;
+            var kk = cv.width / item.dispW;   /* natural px per display px */
+            var rect = {
+                x: Math.round(box.offsetLeft * kk),
+                y: Math.round(box.offsetTop * kk),
+                w: Math.round(box.offsetWidth * kk),
+                h: Math.round(box.offsetHeight * kk)
+            };
+            rect.x = Math.max(0, Math.min(rect.x, cv.width - rect.w));
+            rect.y = Math.max(0, Math.min(rect.y, cv.height - rect.h));
+            return rect;
+        }
+
+        function rectsOverlap(a, b) {
+            return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+        }
+
+        function padCropRect(rect, cv) {
+            if (!rect || !cv) return rect;
+            var pad = Math.max(8, Math.round(Math.min(rect.w, rect.h) * 0.04));
+            var x = Math.max(0, rect.x - pad);
+            var y = Math.max(0, rect.y - pad);
+            var x2 = Math.min(cv.width, rect.x + rect.w + pad);
+            var y2 = Math.min(cv.height, rect.y + rect.h + pad);
+            return { x: x, y: y, w: Math.max(1, x2 - x), h: Math.max(1, y2 - y) };
+        }
+
+        /* =====================================================================
+           PDF TEXT → LINES — robust 2-column (name + address) layout splitter
+           Groups items into Y bands, detects largest X gap as column divider,
+           joins char-fragments with EMPTY string (explicit " " items handle
+           word spacing). Returns cleaned \n-separated text block.
+           ===================================================================== */
+        function itemsToText(items, vpWidth) {
+            if (!items || !items.length) return '';
+            /* Step 1: group into Y bands (within ±3px = same band) */
+            var bands = [];
+            var sorted = items.slice().sort(function (a, b) {
+                var dy = a.y - b.y;
+                if (Math.abs(dy) <= 3) return a.x - b.x;
+                return dy;
+            });
+            for (var g = 0; g < sorted.length; g++) {
+                var it = sorted[g];
+                var placed = false;
+                for (var bi = 0; bi < bands.length; bi++) {
+                    var brep = bands[bi][0];
+                    if (Math.abs(it.y - brep.y) <= 4) { bands[bi].push(it); placed = true; break; }
+                }
+                if (!placed) bands.push([it]);
+            }
+            /* Step 2: for each band, sort by x and detect column-divider gap */
+            var totalLines = [];
+            var minColGap = Math.max(80, (vpWidth || 1200) * 0.06);
+            for (var bi2 = 0; bi2 < bands.length; bi2++) {
+                var band = bands[bi2];
+                band.sort(function (a, b) { return a.x - b.x; });
+                if (band.length >= 2) {
+                    /* find biggest X gap between (prevRightEdge, nextX) */
+                    var maxGap = 0, maxGapAt = -1, prevR = null;
+                    for (var xi = 0; xi < band.length; xi++) {
+                        var xit = band[xi];
+                        var xr = xit.x + Math.max(xit.w || 4, (xit.s || '').length * 4);
+                        if (prevR != null) {
+                            var gg = xit.x - prevR;
+                            if (gg > maxGap) { maxGap = gg; maxGapAt = xi; }
+                        }
+                        if (prevR == null || xr > prevR) prevR = xr;
+                    }
+                    if (maxGapAt > 0 && maxGap >= minColGap) {
+                        /* LEFT column band[0..maxGapAt-1], RIGHT column band[maxGapAt..] */
+                        var leftChunk = '';
+                        for (var li = 0; li < maxGapAt; li++) leftChunk += (band[li].s || '');
+                        var rightChunk = '';
+                        for (var ri = maxGapAt; ri < band.length; ri++) rightChunk += (band[ri].s || '');
+                        totalLines.push(leftChunk);
+                        totalLines.push(rightChunk);
+                        continue;
+                    }
+                }
+                var single = '';
+                for (var si = 0; si < band.length; si++) single += (band[si].s || '');
+                totalLines.push(single);
+            }
+            return totalLines.map(function (ln) {
+                return ln.replace(/[ \t\u00A0]+/g, ' ').replace(/^ | $/g, '');
+            }).filter(function (ln) { return ln && ln.length > 0; }).join('\n');
+        }
+
+        /* PDF embedded text — sirf crop box ke andar wale items */
+        function extractPdfTextInRect(pageIdx, rect, cv) {
+            var items = pdfPageTextItems[pageIdx];
+            if (!items || !rect) return '';
+            var r = padCropRect(rect, cv || { width: 99999, height: 99999 });
+            var picked = [];
+            for (var i = 0; i < items.length; i++) {
+                var it = items[i];
+                var tb = { x: it.x, y: it.y, w: Math.max(it.w, 2), h: Math.max(it.h, 8) };
+                var cx = it.x + tb.w / 2, cy = it.y + tb.h / 2;
+                if (rectsOverlap(r, tb) || (cx >= r.x && cx <= r.x + r.w && cy >= r.y && cy <= r.y + r.h)) {
+                    picked.push(it);
+                }
+            }
+            if (!picked.length) return '';
+            var vpW = (cv && cv.width) ? cv.width : ((picked.length) ? picked[picked.length - 1].x + 100 : 1200);
+            return itemsToText(picked, vpW);
+        }
+
+        /* DD/MM/YYYY ya similar */
+        function extractDateFromText(text, kind) {
+            if (!text) return null;
+            var t = text.replace(/\s+/g, ' ');
+            if (kind === 'issued') {
+                var m = t.match(/(?:Aadhaar\s*no\.?\s*)?issued[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
+                if (m) return m[1];
+                m = t.match(/issued[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
+                if (m) return m[1];
+            }
+            if (kind === 'details') {
+                var d = t.match(/Details\s+as\s+on[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
+                if (d) return d[1];
+                d = t.match(/Details\s+as\s+on[^0-9]*([\d\/\-\.]{8,12})/i);
+                if (d) return d[1];
+                d = t.match(/as\s+on[^0-9]{0,20}(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
+                if (d) return d[1];
+            }
+            return null;
+        }
+
+        /* =====================================================================
+           CROP & EXTRACT — sirf jo box draw kiya, USIHI se data extract karo.
+           Pure page se nahi — sirf crop region se.
+           ===================================================================== */
+        async function cropAndExtract() {
+            if (!cropBoxes.length) { alert('Pehle PDF upload karein!'); return; }
+            if (cropExtractBusy) return;
+            cropExtractBusy = true;
+
+            showProgress('Crop se data nikal rahe hain...');
+            updateProgress(5);
+
+            try {
+                var ok = await extractFromCrop(cropBoxes[0]);
+                if (!ok) {
+                    showProgress('⚠️ OCR se text nahi mila — box dono cards par set karke dubara try karein.');
+                    return;
+                }
+                updateProgress(100);
+                showProgress('✅ Data update — Page 1 & 2 text + side inputs (image same rahegi)');
+                closeCropper();
+            } finally {
+                cropExtractBusy = false;
+            }
+        }
+
+        /* Backward-compat alias */
+        function setCropTarget(idx) { cropAndExtract(); }
+
+        /* =====================================================================
+           A4 VIEW + PRINT — dono pages ek A4 par (front | back)
+           ===================================================================== */
+        function toggleA4() {
+            var b = document.body;
+            if (b) b.classList.toggle('a4mode');
+            computeCardZoom();
+        }
+        function printPage() {
+            window.print();
+        }
+
+        /* =====================================================================
+           PDF UPLOAD + OCR — sirf generic demo fields bharo.
+           REAL government-ID numbers kabhi copy/reproduce NAHI hote.
+           ===================================================================== */
+        /* =====================================================================
+           AUTO-CROP — PDF page ka content (non-white) region detect karo
+           ===================================================================== */
+        function autoCropRegion(imgCanvas) {
+            var w = imgCanvas.width, h = imgCanvas.height;
+            var ctx = imgCanvas.getContext('2d');
+            var data = ctx.getImageData(0, 0, w, h).data;
+            var minX = w, maxX = -1, minY = h, maxY = -1;
+            var step = 3;
+
+            function isBG(px) {
+                var r = data[px], g = data[px + 1], b = data[px + 2], a = data[px + 3];
+                return r > 235 && g > 235 && b > 235 && a > 240;
+            }
+            for (var y = 0; y < h; y += step) {
+                for (var x = 0; x < w; x += step) {
+                    var idx = (y * w + x) * 4;
+                    if (!isBG(idx)) {
+                        if (x < minX) minX = x; if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; if (y > maxY) maxY = y;
+                    }
+                }
+            }
+            if (maxX < 0) return null; /* all-white page */
+            var pad = Math.round(Math.min(w, h) * 0.012) + 2;
+            return {
+                x: Math.max(0, minX - pad), y: Math.max(0, minY - pad),
+                w: Math.min(w - 1, maxX + pad) - Math.max(0, minX - pad) + 1,
+                h: Math.min(h - 1, maxY + pad) - Math.max(0, minY - pad) + 1
+            };
+        }
+
+        /* Ek page par agar DO cards side-by-side hon to vertical white gap se split */
+        function splitTwoCards(imgCanvas, rect) {
+            var w = imgCanvas.width, h = imgCanvas.height;
+            var ctx = imgCanvas.getContext('2d');
+            var data = ctx.getImageData(0, 0, w, h).data;
+
+            function colWhite(x) {
+                for (var y = rect.y; y < rect.y + rect.h; y += 2) {
+                    var idx = (y * w + x) * 4;
+                    if (!(data[idx] > 235 && data[idx + 1] > 235 && data[idx + 2] > 235)) return false;
+                }
+                return true;
+            }
+
+            var best = null, bestW = 0, i = rect.x, endX = rect.x + rect.w;
+            while (i < endX) {
+                if (colWhite(i)) {
+                    var j = i;
+                    while (j < endX && colWhite(j)) j++;
+                    var bw = j - i;
+                    if (bw > bestW) { bestW = bw; best = Math.floor((i + j) / 2); }
+                    i = j;
+                } else i++;
+            }
+            if (best != null && bestW > 4 && best - rect.x > rect.w * 0.25 && (rect.x + rect.w) - best > rect.w * 0.25) {
+                return [
+                    { x: rect.x, y: rect.y, w: best - rect.x, h: rect.h },
+                    { x: best, y: rect.y, w: (rect.x + rect.w) - best, h: rect.h }
+                ];
+            }
+            return null;
+        }
+
+        /* Ek page par agar DO cards upar-neeche hon to horizontal white gap se split */
+        function splitTwoRows(imgCanvas, rect) {
+            var w = imgCanvas.width, h = imgCanvas.height;
+            var data = imgCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+
+            function rowWhite(y) {
+                for (var x = rect.x; x < rect.x + rect.w; x += 2) {
+                    var idx = (y * w + x) * 4;
+                    if (!(data[idx] > 235 && data[idx + 1] > 235 && data[idx + 2] > 235)) return false;
+                }
+                return true;
+            }
+
+            var best = null, bestH = 0, i = rect.y, endY = rect.y + rect.h;
+            while (i < endY) {
+                if (rowWhite(i)) {
+                    var j = i;
+                    while (j < endY && rowWhite(j)) j++;
+                    var bl = j - i;
+                    if (bl > bestH) { bestH = bl; best = Math.floor((i + j) / 2); }
+                    i = j;
+                } else i++;
+            }
+            if (best != null && bestH > 4 && best - rect.y > rect.h * 0.25 && (rect.y + rect.h) - best > rect.h * 0.25) {
+                return [
+                    { x: rect.x, y: rect.y, w: rect.w, h: best - rect.y },
+                    { x: rect.x, y: best - 1, w: rect.w, h: (rect.y + rect.h) - best + 1 }
+                ];
+            }
+            return null;
+        }
+
+        function cropToCanvas(srcCanvas, sx, sy, sw, sh, outW) {
+            var out = document.createElement('canvas');
+            var kk = outW / sw;
+            out.width = Math.max(1, Math.round(outW));
+            out.height = Math.max(1, Math.round(sh * kk));
+            var c = out.getContext('2d');
+            c.drawImage(srcCanvas, sx, sy, sw, sh, 0, 0, out.width, out.height);
+            return out;
+        }
+
+        async function ocrCanvas(cv) {
+            updateProgress(55);
+            var r = await Tesseract.recognize(cv, 'hin+eng', {
+                logger: function (m) {
+                    if (m.status === 'recognizing text') updateProgress(55 + Math.round(m.progress * 35));
+                }
+            });
+            /* Clean replacement/box chars from OCR output */
+            return (r.data.text || '').replace(/[\uFFFD\u25A0-\u25FF\u2580-\u259F]/g, '');
+        }
+
+        /* =====================================================================
+           PDF UPLOAD — auto-crop + OCR. File aate hi card region khud crop hoti hai.
+           REAL government-ID numbers kabhi copy/reproduce NAHI hote.
+           ===================================================================== */
+        async function handleFile(file) {
+            if (!file) { return; }
+            var isPdf = file.type === 'application/pdf';
+            var isImg = /^image\//.test(file.type || '');
+            if (!isPdf && !isImg) { alert('Sirf PDF ya image upload karein!'); return; }
+            if (isPdf && typeof pdfjsLib === 'undefined') { alert('PDF.js load nahi hua — internet check karein.'); return; }
+            if (typeof Tesseract === 'undefined') { alert('Tesseract load nahi hua — internet check karein.'); return; }
+
+            showProgress('File load ho raha hai...');
+            pdfPageCanvases = [];
+            pdfPageTexts = [];
+            pdfPageTextItems = [];
+
+            try {
+                if (isImg) {
+                    /* ---- IMAGE: canvas par draw karo ---- */
+                    var url = URL.createObjectURL(file);
+                    var imgEl = new Image();
+                    await new Promise(function (res, rej) { imgEl.onload = res; imgEl.onerror = rej; imgEl.src = url; });
+                    var maxW = 2200;
+                    var sc = Math.min(1, maxW / imgEl.width);
+                    var bgCanvas = document.createElement('canvas');
+                    bgCanvas.width = Math.max(1, Math.round(imgEl.width * sc));
+                    bgCanvas.height = Math.max(1, Math.round(imgEl.height * sc));
+                    bgCanvas.getContext('2d').drawImage(imgEl, 0, 0, bgCanvas.width, bgCanvas.height);
+                    URL.revokeObjectURL(url);
+                    pdfPageCanvases.push(bgCanvas);
+                    if (canvas && ctx) {
+                        canvas.width = bgCanvas.width; canvas.height = bgCanvas.height; canvas.style.display = 'block';
+                        ctx.drawImage(bgCanvas, 0, 0);
+                    }
+                } else {
+                    /* ---- PDF: pages render karo + DIRECT text extract ---- */
+                    var ab = await file.arrayBuffer();
+                    var pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+                    var n = 1;
+                    var pdfDirectText = '';
+
+                    for (var i = 1; i <= n; i++) {
+                        showProgress('Page ' + i + '/' + n + ' process ho raha hai...');
+                        updateProgress(Math.round((i / n) * 40));
+                        var page = await pdf.getPage(i);
+                        var vp = page.getViewport({ scale: 2 });
+
+                        /* — Direct text extraction (PDF mein embedded text — no OCR needed,
+                           Hindi bhi sahi aayegi bina boxes ke) — */
+                        try {
+                            var tc = await page.getTextContent();
+                            var pageItems = [];
+                            tc.items.forEach(function (it) {
+                                var s = (it.str == null ? '' : String(it.str));
+                                var tx = pdfjsLib.Util.transform(vp.transform, it.transform);
+                                var th = Math.abs(it.height) || Math.hypot(it.transform[2], it.transform[3]) || 10;
+                                var tw = Math.abs(it.width) || Math.abs(it.transform[0]) || Math.max(1, s.length) * 4;
+                                pageItems.push({
+                                    s: s,
+                                    x: tx[4],
+                                    y: tx[5] - th,
+                                    w: tw,
+                                    h: th
+                                });
+                            });
+                            var cleanedPerLine = itemsToText(pageItems, vp.width);
+                            pdfPageTextItems.push(pageItems);
+                            pdfPageTexts.push(cleanedPerLine);
+                            pdfDirectText += cleanedPerLine + '\n';
+                        } catch (te) {
+                            pdfPageTexts.push('');
+                            pdfPageTextItems.push([]);
+                        }
+
+                        /* — Canvas render (cropper ke liye) — */
+                        var pgCanvas = document.createElement('canvas');
+                        pgCanvas.width = vp.width; pgCanvas.height = vp.height;
+                        await page.render({ canvasContext: pgCanvas.getContext('2d'), viewport: vp }).promise;
+                        pdfPageCanvases.push(pgCanvas);
+                    }
+                    /* NOTE: yahan parseOCR NAHI bulaya — user pehle crop karega,
+                       tabhi cropped region se data extract hoga. */
+                }
+
+                updateProgress(100);
+                showProgress('✅ Crop box adjust karein → OCR button dabayein.');
+                openCropper();
+            } catch (err) {
+                showProgress('❌ File processing mein dikkat: ' + (err && err.message ? err.message : err));
+            }
+        }
+
+        /* =====================================================================
+           PARSE OCR / PDF TEXT — fields extract karo.
+           Hindi garbled/box text detect + clean karo.
+           ===================================================================== */
+
+        /* --- Helpers --- */
+        function _cleanLine(t) {
+            /* OCR ke box/garbage chars hataao + internal whitespace collapse */
+            return (t || '').replace(/[\uFFFD\u25A0-\u25FF\u2580-\u259F\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+                .replace(/\s+/g, ' ').trim();
+        }
+        function _hasValidHindi(t) {
+            /* kam se kam 2 asli Devanagari chars hon */
+            return (t.match(/[\u0900-\u097F]/g) || []).length >= 2;
+        }
+        function _isGarbled(t) {
+            /* agar string mein 30%+ box/garbage/Private-Use chars hain to garbled maano.
+               NOTE: U+F0000-U+FFFFF (Supplementary PUA) stored as surrogate pairs in JS;
+               NEVER write \uF0000-\uFFFFF (breaks to \uF000 + 0 causing giant 0-\uFFFF range
+               that FALSELY matches Devanagari everything). */
+            var clean = t.replace(/\s/g, '');
+            if (!clean.length) return true;
+            /* Supplementary PUA (U+F0000-U+FFFFF) = high surrogate DB80-DBBF + low DC00-DFFF */
+            var puaSuppl = (clean.match(/[\uDB80-\uDBBF][\uDC00-\uDFFF]/g) || []).length;
+            /* BMP garbage: replacement char, box-drawing blocks, BMP PUA */
+            var bmpBad = (clean.match(/[\uFFFD\u25A0-\u25FF\u2580-\u259F\uE000-\uF8FF]/g) || []).length;
+            var bad = bmpBad + puaSuppl;
+            return bad / clean.length > 0.3;
+        }
+        function _hindiRatio(t) {
+            /* Devanagari chars ka total non-space chars mein ratio (0..1) */
+            var total = (t.match(/\S/g) || []).length;
+            if (!total) return 0;
+            var hi = (t.match(/[\u0900-\u097F]/g) || []).length;
+            return hi / total;
+        }
+        function _englishRatio(t) {
+            /* A-Za-z chars ka total non-space chars mein ratio (0..1) */
+            var total = (t.match(/\S/g) || []).length;
+            if (!total) return 0;
+            var en = (t.match(/[A-Za-z]/g) || []).length;
+            return en / total;
+        }
+        function _hasAnyHindi(t) {
+            /* ek bhi Devanagari char hai to true */
+            return /[\u0900-\u097F]/.test(t || '');
+        }
+
+        function extractIdNumbers(fullText) {
+            if (!fullText) return;
+            var aP = [
+                /\b(\d{4}\s\d{4}\s\d{4})\b/,
+                /\b(\d{4}\s?\d{4}\s?\d{4})\b/,
+                /\b(\d{12})\b/,
+                /(\d{4}[\s\-]\d{4}[\s\-]\d{4})/
+            ];
+            var ai, m;
+            for (ai = 0; ai < aP.length; ai++) {
+                m = fullText.match(aP[ai]);
+                if (m) {
+                    var an = m[1].replace(/[\s\-]/g, '');
+                    if (an.length === 12) {
+                        var ae = el('aadhaarNo');
+                        if (ae) {
+                            ae.value = an.replace(/(\d{4})(?=\d)/g, '$1 ');
+                            formatAadhaar(ae);
+                        }
+                        break;
+                    }
+                }
+            }
+            var vP = [
+                /\b(\d{4}\s\d{4}\s\d{4}\s\d{4})\b/,
+                /\b(\d{16})\b/,
+                /(\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4})/
+            ];
+            for (ai = 0; ai < vP.length; ai++) {
+                m = fullText.match(vP[ai]);
+                if (m) {
+                    var vn = m[1].replace(/[\s\-]/g, '');
+                    if (vn.length === 16) {
+                        var ve = el('vidNo');
+                        if (ve) {
+                            ve.value = vn.replace(/(\d{4})(?=\d)/g, '$1 ');
+                            formatVID(ve);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        function parseOCR(text) {
+            if (!text) return;
+
+            var lines = text.split(/[\n\r]+|[|]+/).map(function (l) { return l.trim(); }).filter(Boolean);
+            var fullText = lines.join(' ');
+            if (lines.length <= 2 && fullText.length > 60) {
+                lines = text.split(/\s{2,}|\s(?=W\/O|S\/O|D\/O|C\/O|Address|पता)/i).map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 2; });
+                if (lines.length > 2) fullText = lines.join(' ');
+            }
+
+            /* ---- DOB (pahle nikalo — DOB se pehle waali line name hone ki high chance hai) ---- */
+            var dobIdx = -1;
+            var dobM = fullText.match(/(?:DOB|जन्म\s*तिथि|Year\s+of\s+Birth)[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
+            if (dobM) {
+                setInputVal('dob', 'जन्म तिथि / DOB: ' + dobM[1]);
+                for (var di2 = 0; di2 < lines.length; di2++) {
+                    if (lines[di2].indexOf(dobM[1]) > -1 || /जन्म\s*तिथि|DOB/i.test(lines[di2])) {
+                        dobIdx = di2; break;
+                    }
+                }
+            } else {
+                var allDates = fullText.match(/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/g) || [];
+                for (var di = 0; di < allDates.length; di++) {
+                    var before = fullText.split(allDates[di])[0].slice(-35);
+                    if (!/issued|details|as on/i.test(before)) {
+                        setInputVal('dob', 'जन्म तिथि / DOB: ' + allDates[di]);
+                        for (var di3 = 0; di3 < lines.length; di3++) {
+                            if (lines[di3].indexOf(allDates[di]) > -1 && !/issued|details|as on/i.test(lines[di3])) {
+                                dobIdx = di3; break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            /* ---- Name (Hindi) — DOB se 2-3 lines pehle, ya first valid Hindi name line ---- */
+            var nameHi = null;
+            var nameHiScore = -1;
+
+            function isHindiNameLine(L) {
+                L = _cleanLine(L);
+                if (!_hasValidHindi(L) || _isGarbled(L)) return false;
+                if (L.length < 2 || L.length > 50) return false;
+                /* STATIC BANNER / TAGLINE / SECTION LABELS — kabhi bhi name nahi hona chahiye */
+                if (/पता|पत्ता|address|\bDOB\b|male|female|पुरुष|महिला|लिंग|जन्म|नाम|नंबर|आधार|मेरा|पहचान|पहचान|सरकार|भारत|सत्यापित|असत्यापित|हस्ताक्षर|हस्ताक्षरित|यूनिक|ईकाई|प्राधिकरण|आवेदन|नामांकन|अंकित|वितरित|डाउनलोड|issued|details|ग्राम|पोस्ट|जिला|नगर|राज्य|प्रदेश|मोहल्ला|मकान|वार्ड|post|dist|pin|government|india|unique|authority|identification|downloaded|enrolment|W\/O|S\/O|D\/O|C\/O|अर्धांगिनी|पत्नी|पुत्र|पुत्री|डाकघर|विभाग|स्थान|निवास|^To$|^नमस्ते$/i.test(L)) return false;
+                if (/\d{4}/.test(L)) return false;
+                var hr = _hindiRatio(L);
+                if (hr < 0.55) return false;
+                var er = _englishRatio(L);
+                if (er > 0.25) return false;
+                return true;
+            }
+
+            for (var ni = 0; ni < lines.length; ni++) {
+                var L = _cleanLine(lines[ni]);
+                if (!isHindiNameLine(L)) continue;
+                var score = 0;
+                if (dobIdx > -1 && ni < dobIdx && ni >= dobIdx - 3) score += 10;
+                else if (dobIdx > -1 && ni < dobIdx) score += 5;
+                if (ni < Math.min(lines.length, Math.floor(lines.length * 0.5))) score += 3;
+                if (L.length >= 5 && L.length <= 30) score += 2;
+                if (score > nameHiScore) { nameHiScore = score; nameHi = L; }
+            }
+            if (nameHi) setInputVal('nameHi', nameHi);
+
+            /* ---- Name (English) — DOB ke paas, ya first pure English non-address line ---- */
+            var nameEn = null;
+            var nameEnScore = -1;
+            var nameHiIdx = -1;
+            if (nameHi) { for (var nhi = 0; nhi < lines.length; nhi++) { if (_cleanLine(lines[nhi]) === nameHi) { nameHiIdx = nhi; break; } } }
+
+            function isEnglishNameLine(LE) {
+                LE = _cleanLine(LE);
+                if (_isGarbled(LE)) return false;
+                if (_hasAnyHindi(LE)) return false;
+                if (LE.length < 2 || LE.length > 50) return false;
+                if (/ \d/.test(LE)) return false;
+                if (!/^[A-Za-z][A-Za-z .'-]{1,49}$/.test(LE)) return false;
+                /* STATIC BANNER / TAGLINE / LABELS — never a person name */
+                if (/address|gram|post|dist|male|female|dob|issued|details|uttar|pradesh|bihar|maharashtra|rajasthan|delhi|punjab|village|w\/o|s\/o|d\/o|c\/o|government|india|unique|identification|authority|uidai|aadhaar|aadhar|aadhhar|pin|code|city|state|mobile|phone|tel|email|signature|digitally|verified|unverified|downloaded|enrolment|request|acknowledgement|receipt|date|vid|to|from|care|of|the|ministry|electronics|information|technology|republic|national|card|identity/i.test(LE)) return false;
+                if (/^(DOB|DOB:|VID|VID:|AADHAAR|UID|UIDAI|GOVT|GOVERNMENT|OF|INDIA|REPUBLIC|MHRD|MEITY|MINISTRY|CARD|IDENTITY|TO|FROM|DATE|ENROLMENT|ACKNOWLEDGEMENT|RECEIPT|REQUEST|MOBILE|PHONE|EMAIL|PIN|CODE|STATE|DISTRICT|CITY|VILLAGE|POST|GRAM|ADDRESS|GENDER|MALE|FEMALE)$/i.test(LE)) return false;
+                var er = _englishRatio(LE);
+                if (er < 0.8) return false;
+                return true;
+            }
+
+            for (var ei = 0; ei < lines.length; ei++) {
+                var LE = _cleanLine(lines[ei]);
+                if (!isEnglishNameLine(LE)) continue;
+                var escore = 0;
+                if (nameHiIdx > -1 && ei >= nameHiIdx && ei <= nameHiIdx + 3) escore += 15;
+                else if (nameHiIdx > -1 && Math.abs(ei - nameHiIdx) <= 5) escore += 8;
+                if (dobIdx > -1 && ei < dobIdx && ei >= dobIdx - 4) escore += 10;
+                else if (dobIdx > -1 && ei < dobIdx) escore += 5;
+                if (ei < Math.min(lines.length, Math.floor(lines.length * 0.55))) escore += 3;
+                if (LE.length >= 6 && LE.length <= 35) escore += 2;
+                if (escore > nameEnScore) { nameEnScore = escore; nameEn = LE; }
+            }
+            if (nameEn) {
+                setInputVal('nameEn', nameEn);
+                /* Hindi naam OCR se galat aata hai — English naam se convert karo */
+                setInputVal('nameHi', translitToHindi(nameEn));
+            }
+
+            /* ---- Helper: agar line mein detected naam hai (nameHi or nameEn) to address NAHI hona chahiye ---- */
+            function containsDetectedName(cl) {
+                var c = (cl || '').toLowerCase();
+                if (nameHi) {
+                    var nhWords = _cleanLine(nameHi).split(/\s+/).filter(function (w) { return w && w.length >= 2; });
+                    for (var wi = 0; wi < nhWords.length; wi++) if (c.indexOf(nhWords[wi].toLowerCase()) >= 0) return true;
+                }
+                if (nameEn) {
+                    var neWords = _cleanLine(nameEn).split(/\s+/).filter(function (w) { return w && w.length >= 2; });
+                    for (var we = 0; we < neWords.length; we++) if (c.indexOf(neWords[we].toLowerCase()) >= 0) return true;
+                }
+                return false;
+            }
+
+            /* ---- Gender ---- */
+            if (/\bFEMALE\b/i.test(fullText)) {
+                setInputVal('gender', 'महिला / FEMALE');
+            } else if (/\bMALE\b/i.test(fullText)) {
+                setInputVal('gender', 'पुरुष / MALE');
+            }
+
+            /* ---- Page 1 overlay: issued ---- */
+            var issuedDate = extractDateFromText(fullText, 'issued');
+            if (issuedDate) setInputVal('issuedOn', 'Aadhaar no. issued: ' + issuedDate);
+
+            /* ---- Page 2 overlay: details ---- */
+            var detailsDate = extractDateFromText(fullText, 'details');
+            if (detailsDate) setInputVal('detailsOn', 'Details as on: ' + detailsDate);
+
+            /* ---- Hindi Address — sirf lines jisme Devanagari ratio >= 0.45, English ratio <= 0.22 ---- */
+            var hindiAddr = lines.filter(function (l) {
+                var cl = _cleanLine(l);
+                if (!_hasValidHindi(cl) || _isGarbled(cl)) return false;
+                if (cl.length <= 5) return false;
+                if (/\bDOB\b|जन्म|जन्मतिथि|जन्म\s*तिथि|पुरुष|महिला|लिंग/i.test(cl)) return false;
+                if (/(Mobile|Phone|Tel|Email|Signature|Digitally|Identification|Authority|Date\s*:|^IST$|Aadhaar|issued|VID|Enrolment|^To$|आधार|पहचान|प्रमाण|नागरिकता|सत्यापन|प्रमाणीकरण|उपयोग|क्यूआर|ऑफलाइन|ऑनलाइन|यूनिक|यूआईडीएआई)/i.test(cl)) return false;
+                /* Agar line mein detect kiya hua naam (सिर्फ अकेला) + addressy keywords nahi, to skip */
+                if (containsDetectedName(cl)) {
+                    var hasAddrKeyword = (cl.indexOf(',') > -1 || /\d{6}/.test(cl) ||
+                        /ग्राम|पोस्ट|जिला|नगर|राज्य|प्रदेश|मोहल्ला|मकान|वार्ड|पता|अर्धांगिनी|पत्नी|पुत्र|पुत्री|पोस्ट|डाकघर|जिउती|रोड|पो\s*स्ट|संदवा|एस\/ओ|सी\/ओ|डी\/ओ/.test(cl));
+                    if (!hasAddrKeyword) return false;
+                }
+                var hr = _hindiRatio(cl);
+                var er = _englishRatio(cl);
+                if (hr < 0.45) return false;
+                if (er > 0.22) return false;   /* TIGHTER: OCR wale "iF i ; ig" type garbage Latin er 0.25-0.35 hote hain, unhe roko */
+                return (cl.indexOf(',') > -1 || cl.indexOf('-') > -1 || /\d{6}/.test(cl) ||
+                    /ग्राम|पोस्ट|जिला|नगर|राज्य|प्रदेश|मोहल्ला|मकान|वार्ड|पता|अर्धांगिनी|पत्नी|पुत्र|पुत्री|पोस्ट|डाकघर/.test(cl));
+            }).map(_cleanLine);
+            if (!hindiAddr.length && _hasValidHindi(fullText)) {
+                var fullHi = fullText.split(/\n|\. /).filter(function (seg) {
+                    return _hindiRatio(seg) >= 0.45 && _englishRatio(seg) <= 0.22;
+                }).map(_cleanLine);
+                if (fullHi.length) hindiAddr = fullHi.slice(0, 4);
+                else hindiAddr = [_cleanLine(fullText)];
+            }
+            if (hindiAddr.length > 0) setInputVal('addressHi', 'पता:\n' + hindiAddr.join('\n'));
+
+            /* ---- English Address — ek bhi Devanagari char nahi chahiye ---- */
+            var engAddr = lines.filter(function (l) {
+                var cl = _cleanLine(l);
+                if (_hasAnyHindi(cl)) return false;
+                if (cl.length <= 5) return false;
+                if (/^\d{4}\s?\d{3,}/.test(cl)) return false;    /* aadhaar number fragments like "2015 2161 6" */
+                var onlyDigits = cl.replace(/\s|\-|\./g, '');
+                if (/^\d/.test(cl) && onlyDigits.length >= 8) return false;  /* aadhaar/VID number line */
+                if (_isGarbled(cl)) return false;
+                if (/(Mobile|Phone|Tel|Email|Signature|Digitally|Identification|Authority|Date\s*:|^IST$|Aadhaar|issued|VID|Enrolment|^To$|Details|authentication|scanning|QR\s*code|offline|XML|Disclaimer|Citizenship|Birth|Proof|Verification|UIDAI|Identity|Card|Republic|National|Electronics|Ministry|Technology|Government|India)/i.test(cl)) return false;
+                if (containsDetectedName(cl)) {
+                    var hasAddrK = /W\/O|S\/O|D\/O|C\/O|Gram|Post|DIST|Village|City|State|Pin|Code|\d{6}|Road|Lane|Colony|Nagar|District|PO|Bazar|Ganj/i.test(cl);
+                    if (!hasAddrK) return false;
+                }
+                return /(W\/O|S\/O|D\/O|C\/O|Gram|Post|DIST|Village|City|State|Pin|Code|Uttar|Pradesh|Bihar|Maharashtra|Rajasthan|Delhi|Punjab|Haryana|Gujarat|Madhya|Karnataka|Tamil|Kerala|Andhra|Telangana|Odisha|West|Bengal|Jharkhand|Chhattisgarh|Assam|\d{6}|Road|Lane|Colony|Street|PO)/i.test(cl);
+            }).map(_cleanLine);
+            if (engAddr.length > 0) setInputVal('addressEn', 'Address:\n' + engAddr.join('\n'));
+
+            extractIdNumbers(fullText);
+        }
+
+        /* =====================================================================
+           PROGRESS / STATUS
+           ===================================================================== */
+        function showProgress(msg) {
+            var bar = el('progressBar'), st = el('statusText');
+            if (bar) bar.style.display = 'block';
+            if (st) { st.style.display = 'block'; st.innerHTML = '<span class="spinner"></span> ' + msg; }
+        }
+        function updateProgress(p) {
+            var f = el('progressFill');
+            if (f) f.style.width = (p > 100 ? 100 : p) + '%';
+        }
+
+        /* =====================================================================
+           RESPONSIVE ZOOM — phone/tablet par cards ko screen width ke andar fit
+           karta hai bina design ko chhedte hue (806px card zoom hota hai, overlay
+           positions ka relative geometry wahi rehta hai). Desktop (>1120px) par
+           zoom = 1 (original size).
+           ===================================================================== */
+        function computeCardZoom() {
+            var stack = el('cardsStack');
+            if (!stack) return;
+            var b = document.body;
+            var vw = document.documentElement.clientWidth || window.innerWidth;
+            var isA4 = !!(b && b.classList.contains('a4mode'));
+            var base = 1;
+            if (vw <= 1120) {
+                var pad = vw <= 640 ? 16 : 40;
+                var avail = vw - pad;
+                if (isA4) {
+                    /* A4 view: dono cards ek row mein — poori pair ko fit karo */
+                    base = Math.min(1, avail / (806 * 2 + 22));
+                    if (base < 0.12) base = 0.12;
+                } else {
+                    base = Math.min(1, avail / 806);
+                    if (base < 0.25) base = 0.25;
+                }
+            } else if (isA4) {
+                base = 0.62;   /* desktop par pehle jaisa hi size */
+            }
+            stack.style.setProperty('--card-zoom', String(base));
+        }
+        window.addEventListener('resize', computeCardZoom);
+        window.addEventListener('orientationchange', function () { setTimeout(computeCardZoom, 150); });
+
+        /* =====================================================================
+           PNG EXPORT — html2canvas (dono cards + SAMPLE/DEMO watermark)
+           ===================================================================== */
+        async function downloadImage() {
+            var stack = el('cardsStack');
+            if (!stack) { alert('Preview area nahi mila.'); return; }
+            if (typeof html2canvas === 'undefined') { alert('html2canvas load nahi hua.'); return; }
+
+            showProgress('PNG ban raha hai...');
+
+            var b = document.body;
+            var hadA4 = b.classList.contains('a4mode');
+            b.classList.remove('a4mode');
+            b.classList.add('exportRow');
+
+            /* responsive zoom ko export ke waqt off karo → full 806px quality */
+            var prevZoom = stack.style.getPropertyValue('--card-zoom');
+            stack.style.setProperty('--card-zoom', '1');
+            updateProgress(20);
+
+            try {
+                await new Promise(function (r) { setTimeout(r, 80); });
+                var c = await html2canvas(stack, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    allowTaint: false
+                });
+
+                /* captured row ko vertical A4 page par center karke rakho */
+                var A4W = 1240, A4H = 1754;   /* A4 portrait @150dpi */
+                var out = document.createElement('canvas');
+                out.width = A4W; out.height = A4H;
+                var ctx = out.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, A4W, A4H);
+
+                var m = Math.round(A4W * 0.045);
+                var s = Math.min((A4W - m * 2) / c.width, (A4H - m * 2) / c.height);
+                var dw = c.width * s, dh = c.height * s;
+                /* print jaisa — page ke top (start) se, horizontally centered */
+                ctx.drawImage(c, (A4W - dw) / 2, m, dw, dh);
+
+                var link = document.createElement('a');
+                link.download = 'aadhaar-demo-a4.png';
+                link.href = out.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showProgress('✅ PNG download ho gaya!');
+            } catch (err) {
+                showProgress('❌ PNG download mein dikkat: ' + (err && err.message ? err.message : err));
+            } finally {
+                stack.style.setProperty('--card-zoom', prevZoom || '');
+                b.classList.remove('exportRow');
+                if (hadA4) b.classList.add('a4mode');
+                computeCardZoom();
+            }
+        }
+
+        /* =====================================================================
+           PDF EXPORT — jsPDF, har card apne page par (aspect ratio preserved)
+           ===================================================================== */
+        async function downloadPDF() {
+            var card1 = el('cardPage1'), card2 = el('cardPage2');
+            if (!card1 || !card2) { alert('Cards nahi mile.'); return; }
+            if (typeof html2canvas === 'undefined' || !window.jspdf) {
+                alert('html2canvas / jsPDF load nahi hua.');
+                return;
+            }
+
+            showProgress('PDF ban raha hai...');
+
+            /* responsive zoom off → full 806px se PDF bane (phone par bhi clean output) */
+            var stack = el('cardsStack');
+            var prevZoom = stack ? stack.style.getPropertyValue('--card-zoom') : '';
+            if (stack) stack.style.setProperty('--card-zoom', '1');
+
+            try {
+                await new Promise(function (r) { setTimeout(r, 80); });
+                var jsPDF = window.jspdf.jsPDF;
+                var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                var PW = 210, PH = 297;                    /* A4 portrait (mm) */
+                var margin = 10, gap = 8;
+                var availW = PW - margin * 2;
+                var cardW = (availW - gap) / 2;            /* dono cards side by side */
+
+                var shots = [];
+                var cards = [card1, card2];
+                for (var i = 0; i < cards.length; i++) {
+                    var c = await html2canvas(cards[i], {
+                        scale: 3,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        allowTaint: false
+                    });
+                    shots.push({ data: c.toDataURL('image/png'), ratio: c.width / c.height });
+                }
+
+                /* dono cards ek hi A4 portrait page par side by side, print jaisa top se */
+                var x = margin;
+                for (var i = 0; i < shots.length; i++) {
+                    var imgW = cardW;
+                    var imgH = imgW / shots[i].ratio;
+                    pdf.addImage(shots[i].data, 'PNG', x, margin, imgW, imgH);
+                    x += cardW + gap;
+                }
+
+                pdf.save('aadhaar-demo.pdf');
+                showProgress('✅ PDF download ho gaya!');
+            } catch (err) {
+                showProgress('❌ PDF download mein dikkat: ' + (err && err.message ? err.message : err));
+            } finally {
+                if (stack) stack.style.setProperty('--card-zoom', prevZoom || '');
+            }
+        }
+
+        /* =====================================================================
+           CLEAR — saare fields clear + status reset
+           ===================================================================== */
+        function clearAll() {
+            ['nameHi', 'nameEn', 'dob', 'gender', 'issuedOn', 'detailsOn', 'addressHi', 'addressEn', 'aadhaarNo', 'vidNo'].forEach(function (id) {
+                var e = el(id);
+                if (e) e.value = '';
+            });
+
+            if (canvas) canvas.style.display = 'none';
+            var bar = el('progressBar'), st = el('statusText'), f = el('progressFill');
+            if (bar) bar.style.display = 'none';
+            if (st) st.style.display = 'none';
+            if (f) f.style.width = '0%';
+
+            resetPhoto();
+            updateCard();
+        }
+
+        /* =====================================================================
+           INIT — defaults load + page 1 selected
+           ===================================================================== */
+        updateCard();
+        setPage(1);
+        computeCardZoom();
+    </script>
+
+</body>
+
+</html>

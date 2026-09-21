@@ -1,0 +1,367 @@
+Warning: Cannot polyfill `DOMMatrix`, rendering may be broken: "Error: Cannot find module 'canvas'
+Require stack:
+- /Users/singsys/Downloads/aadhar design/node_modules/pdfjs-dist/legacy/build/pdf.js
+- /Users/singsys/Downloads/aadhar design/test_itemsToText_final.js".
+Warning: Cannot polyfill `Path2D`, rendering may be broken: "Error: Cannot find module 'canvas'
+Require stack:
+- /Users/singsys/Downloads/aadhar design/node_modules/pdfjs-dist/legacy/build/pdf.js
+- /Users/singsys/Downloads/aadhar design/test_itemsToText_final.js".
+
+================================================================================
+FILE: 210164384605.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% clean] नामांकन क्रम/ Enrolment No.: 0000/00668/23966
+  2: [hr0% er100% clean] To
+  3: [hr100% er0% clean] रमेश कुमार
+  4: [hr0% er100% clean] Ramesh Kumar
+  5: [hr0% er80% clean] C/O Sundar,
+  6: [hr0% er97% clean] Gram Mahewa Post Hariharpur Bedauli,
+  7: [hr0% er85% clean] VTC: Mirzapur,
+  8: [hr0% er83% clean] PO: Mirzapur,
+  9: [hr0% er89% clean] District: Mirzapur,
+ 10: [hr0% er89% clean] State: Uttar Pradesh,
+ 11: [hr0% er50% clean] PIN Code: 231001
+ 12: [hr0% er35% clean] Mobile: 8542009948
+ 13: [hr0% er100% clean] Signature Not Verified
+ 14: [hr0% er100% clean] Digitally signed by DS Unique
+ 15: [hr0% er100% clean] Identification Authority of India
+ 16: [hr0% er0% clean] 06
+ 17: [hr0% er17% clean] Date: 2026.07.25 07:17:27
+ 18: [hr0% er100% clean] IST
+ 19: [hr0% er0% clean] 2101 6438 4605
+ 20: [hr0% er15% clean] VID : 9165 9417 5590 4490
+ 21: [hr75% er0% clean] पता:
+ 22: [hr100% er0% clean] रमेश कुमार
+ 23: [hr91% er0% clean] सु न्दर, ाम महेवा पो स्ट हरहरपुर बेदौली, मज़ापुर, मज़ापुर,
+ 24: [hr0% er100% clean] Ramesh Kumar
+ 25: [hr86% er0% clean] मज़ापुर,
+ 26: [hr61% er0% clean] उत्त र प्रदेश - 231001
+ 27: [hr29% er14% clean] जन् म तथ/DOB: 02/06/2002
+ 28: [hr0% er88% clean] Address:
+ 29: [hr50% er40% clean] पु रुष/ MALE
+ 30: [hr0% er93% clean] C/O Sundar, Gram Mahewa Post Hariharpur Bedauli,
+ 31: [hr0% er86% clean] Mirzapur, PO: Mirzapur, DIST: Mirzapur,
+ 32: [hr0% er63% clean] Uttar Pradesh - 231001
+ 33: [hr0% er50% clean] Details as on: 25/07/2026
+ 34: [hr0% er56% clean] Aadhaar no. issued: 29/05/2015
+ 35: [hr0% er0% clean] 2101 6438 4605
+ 36: [hr0% er0% clean] 2101 6438 4605
+ 37: [hr0% er15% clean] VID : 9165 9417 5590 4490
+
+DOB index: 26
+✓ Name (Hindi) : रमेश कुमार
+✓ Name (English): Ramesh Kumar
+
+✓ Hindi Address (पता) lines:
+    सु न्दर, ाम महेवा पो स्ट हरहरपुर बेदौली, मज़ापुर, मज़ापुर,
+    मज़ापुर,
+    उत्त र प्रदेश - 231001
+
+✓ English Address lines:
+    C/O Sundar,
+    Gram Mahewa Post Hariharpur Bedauli,
+    VTC: Mirzapur,
+    PO: Mirzapur,
+    District: Mirzapur,
+    State: Uttar Pradesh,
+    PIN Code: 231001
+    Mobile: 8542009948
+    C/O Sundar, Gram Mahewa Post Hariharpur Bedauli,
+    Mirzapur, PO: Mirzapur, DIST: Mirzapur,
+    Uttar Pradesh - 231001
+
+✓ DOB/Gender line: जन् म तथ/DOB: 02/06/2002
+
+================================================================================
+FILE: 212576167624.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% clean] नामांकन क्रम/ Enrolment No.: 1420/50102/06859
+  2: [hr0% er100% clean] To
+  3: [hr100% er0% clean] सीता देवी
+  4: [hr0% er100% clean] Sita Devi
+  5: [hr0% er90% clean] W/O: Sworgiy Virendra Kumar Singh,
+  6: [hr0% er93% clean] jigana bichkot,
+  7: [hr0% er91% clean] post jigana,
+  8: [hr0% er80% clean] VTC: Jigna,
+  9: [hr0% er82% clean] PO: Jigna Rs,
+ 10: [hr0% er89% clean] Sub District: Chunar,
+ 11: [hr0% er89% clean] District: Mirzapur,
+ 12: [hr0% er89% clean] State: Uttar Pradesh,
+ 13: [hr0% er50% clean] PIN Code: 231313
+ 14: [hr0% er35% clean] Mobile: 9793100782
+ 15: [hr0% er100% clean] Signature Not Verified
+ 16: [hr0% er100% clean] Digitally signed by DS Unique
+ 17: [hr0% er100% clean] Identification Authority of India
+ 18: [hr0% er0% clean] 06
+ 19: [hr0% er17% clean] Date: 2026.07.30 18:53:56
+ 20: [hr0% er100% clean] IST
+ 21: [hr0% er0% clean] 2125 7616 7624
+ 22: [hr0% er15% clean] VID : 9194 1247 0997 6058
+ 23: [hr75% er0% clean] पता:
+ 24: [hr100% er0% clean] सीता देवी
+ 25: [hr93% er0% clean] अधागनी: स्वगय वरे न्द्रकुमार सह, जगना बचकोट, पो स्ट
+ 26: [hr0% er100% clean] Sita Devi
+ 27: [hr83% er0% clean] जगना, जगना, जगना रस, मज़ापुर,
+ 28: [hr61% er0% clean] उत्त र प्रदेश - 231313
+ 29: [hr29% er14% clean] जन् म तथ/DOB: 01/02/1965
+ 30: [hr0% er88% clean] Address:
+ 31: [hr36% er55% clean] महला/ FEMALE
+ 32: [hr0% er91% clean] W/O: Sworgiy Virendra Kumar Singh, jigana bichkot,
+ 33: [hr0% er86% clean] post jigana, Jigna, PO: Jigna Rs, DIST: Mirzapur,
+ 34: [hr0% er63% clean] Uttar Pradesh - 231313
+ 35: [hr0% er50% clean] Details as on: 30/07/2026
+ 36: [hr0% er56% clean] Aadhaar no. issued: 30/04/2015
+ 37: [hr0% er0% clean] 2125 7616 7624
+ 38: [hr0% er0% clean] 2125 7616 7624
+ 39: [hr0% er15% clean] VID : 9194 1247 0997 6058
+
+DOB index: 28
+✓ Name (Hindi) : सीता देवी
+✓ Name (English): Sita Devi
+
+✓ Hindi Address (पता) lines:
+    अधागनी: स्वगय वरे न्द्रकुमार सह, जगना बचकोट, पो स्ट
+    जगना, जगना, जगना रस, मज़ापुर,
+    उत्त र प्रदेश - 231313
+
+✓ English Address lines:
+    W/O: Sworgiy Virendra Kumar Singh,
+    jigana bichkot,
+    post jigana,
+    VTC: Jigna,
+    PO: Jigna Rs,
+    Sub District: Chunar,
+    District: Mirzapur,
+    State: Uttar Pradesh,
+    PIN Code: 231313
+    Mobile: 9793100782
+    W/O: Sworgiy Virendra Kumar Singh, jigana bichkot,
+    post jigana, Jigna, PO: Jigna Rs, DIST: Mirzapur,
+    Uttar Pradesh - 231313
+
+✓ DOB/Gender line: जन् म तथ/DOB: 01/02/1965
+
+================================================================================
+FILE: 215270342984.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr15% er28% clean] ामां कम/ Enrolment No.: 2777/11042/00721
+  2: [hr0% er100% clean] To
+  3: [hr78% er0% clean] ंजा देवी
+  4: [hr0% er100% clean] Sanjana Devi
+  5: [hr0% er81% clean] W/O: Sanjay Kumar,
+  6: [hr0% er92% clean] Post Paidapur,
+  7: [hr0% er85% clean] VTC: Madhopur,
+  8: [hr0% er83% clean] PO: Mirzapur,
+  9: [hr0% er89% clean] Sub District: Chunar,
+ 10: [hr0% er89% clean] District: Mirzapur,
+ 11: [hr0% er89% clean] State: Uttar Pradesh,
+ 12: [hr0% er50% clean] PIN Code: 231001
+ 13: [hr0% er35% clean] Mobile: 8176015869
+ 14: [hr0% er100% clean] Signature Not Verified
+ 15: [hr0% er100% clean] Digitally signed by DS Unique
+ 16: [hr0% er100% clean] Identification Authority of India
+ 17: [hr0% er0% clean] 06
+ 18: [hr0% er17% clean] Date: 2026.07.29 10:25:59
+ 19: [hr0% er100% clean] IST
+ 20: [hr0% er0% clean] 2152 7034 2984
+ 21: [hr0% er100% clean] VID
+ 22: [hr25% er0% GARBLED] ा:
+ 23: [hr78% er0% clean] ंजा देवी
+ 24: [hr60% er4% clean] W/O: ंजय ुमार, ोसट ैड़ाुर, माधोुर, मज़ाुर, मज़ाुर,
+ 25: [hr0% er100% clean] Sanjana Devi
+ 26: [hr50% er0% clean] उतर पदेश - 231001
+ 27: [hr18% er14% clean] जनम थ/DOB: 01/01/1986
+ 28: [hr0% er88% clean] Address:
+ 29: [hr0% er85% clean] W/O: Sanjay Kumar, Post Paidapur, Madhopur, PO:
+ 30: [hr33% er50% clean] महला/ FEMALE
+ 31: [hr0% er87% clean] Mirzapur, DIST: Mirzapur,
+ 32: [hr0% er63% clean] Uttar Pradesh - 231001
+ 33: [hr0% er50% clean] Details as on: 29/07/2026
+ 34: [hr0% er56% clean] Aadhaar no. issued: 06/11/2014
+ 35: [hr0% er100% clean] VID
+
+DOB index: 26
+✓ Name (Hindi) : ंजा देवी
+✓ Name (English): Sanjana Devi
+
+✓ Hindi Address (पता) lines:
+    W/O: ंजय ुमार, ोसट ैड़ाुर, माधोुर, मज़ाुर, मज़ाुर,
+    उतर पदेश - 231001
+
+✓ English Address lines:
+    W/O: Sanjay Kumar,
+    Post Paidapur,
+    VTC: Madhopur,
+    PO: Mirzapur,
+    Sub District: Chunar,
+    District: Mirzapur,
+    State: Uttar Pradesh,
+    PIN Code: 231001
+    Mobile: 8176015869
+    W/O: Sanjay Kumar, Post Paidapur, Madhopur, PO:
+    Mirzapur, DIST: Mirzapur,
+    Uttar Pradesh - 231001
+
+✓ DOB/Gender line: जनम थ/DOB: 01/01/1986
+
+================================================================================
+FILE: 215756525476.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% clean] नामांकन क्रम/ Enrolment No.: 0636/10818/42719
+  2: [hr0% er100% clean] To
+  3: [hr100% er0% clean] गौरी देवी
+  4: [hr0% er100% clean] Gauri Devi
+  5: [hr0% er77% clean] W/O: Lachiman,
+  6: [hr0% er92% clean] mishr ka pura,
+  7: [hr0% er95% clean] post pahada paidapur,
+  8: [hr0% er83% clean] VTC: Katopur,
+  9: [hr0% er83% clean] PO: Mirzapur,
+ 10: [hr0% er89% clean] Sub District: Chunar,
+ 11: [hr0% er89% clean] District: Mirzapur,
+ 12: [hr0% er89% clean] State: Uttar Pradesh,
+ 13: [hr0% er50% clean] PIN Code: 231001
+ 14: [hr0% er35% clean] Mobile: 7754073896
+ 15: [hr0% er100% clean] Signature Not Verified
+ 16: [hr0% er100% clean] Digitally signed by DS Unique
+ 17: [hr0% er100% clean] Identification Authority of India
+ 18: [hr0% er0% clean] 06
+ 19: [hr0% er17% clean] Date: 2026.07.27 12:52:10
+ 20: [hr0% er100% clean] IST
+ 21: [hr0% er0% clean] 2157 5652 5476
+ 22: [hr0% er15% clean] VID : 9185 2472 7995 8183
+ 23: [hr75% er0% clean] पता:
+ 24: [hr100% er0% clean] गौरी देवी
+ 25: [hr90% er0% clean] अधागनी: लछमन, म श्रका पुरा, पो स्ट पहाड़ा पैडापुर,
+ 26: [hr0% er100% clean] Gauri Devi
+ 27: [hr86% er0% clean] काटोपुर, मज़ापुर, मज़ापुर,
+ 28: [hr61% er0% clean] उत्त र प्रदेश - 231001
+ 29: [hr29% er14% clean] जन् म तथ/DOB: 01/01/1979
+ 30: [hr0% er88% clean] Address:
+ 31: [hr36% er55% clean] महला/ FEMALE
+ 32: [hr0% er89% clean] W/O: Lachiman, mishr ka pura, post pahada paidapur,
+ 33: [hr0% er85% clean] Katopur, PO: Mirzapur, DIST: Mirzapur,
+ 34: [hr0% er63% clean] Uttar Pradesh - 231001
+ 35: [hr0% er50% clean] Details as on: 27/07/2026
+ 36: [hr0% er56% clean] Aadhaar no. issued: 25/11/2014
+ 37: [hr0% er0% clean] 2157 5652 5476
+ 38: [hr0% er0% clean] 2157 5652 5476
+ 39: [hr0% er15% clean] VID : 9185 2472 7995 8183
+
+DOB index: 28
+✓ Name (Hindi) : गौरी देवी
+✓ Name (English): Gauri Devi
+
+✓ Hindi Address (पता) lines:
+    अधागनी: लछमन, म श्रका पुरा, पो स्ट पहाड़ा पैडापुर,
+    काटोपुर, मज़ापुर, मज़ापुर,
+    उत्त र प्रदेश - 231001
+
+✓ English Address lines:
+    W/O: Lachiman,
+    mishr ka pura,
+    post pahada paidapur,
+    VTC: Katopur,
+    PO: Mirzapur,
+    Sub District: Chunar,
+    District: Mirzapur,
+    State: Uttar Pradesh,
+    PIN Code: 231001
+    Mobile: 7754073896
+    W/O: Lachiman, mishr ka pura, post pahada paidapur,
+    Katopur, PO: Mirzapur, DIST: Mirzapur,
+    Uttar Pradesh - 231001
+
+✓ DOB/Gender line: जन् म तथ/DOB: 01/01/1979
+
+================================================================================
+FILE: 216160700256.pdf
+================================================================================
+
+--- Page 1 / vp.width = 1224 ---
+Warning: fetchStandardFontData: failed to fetch file "LiberationSans-Regular.ttf" with "UnknownErrorException: The standard font "baseUrl" parameter must be specified, ensure that the "standardFontDataUrl" API parameter is provided.".
+
+--- EXTRACTED LINES (sorted by itemsToText 2-col split) ---
+  1: [hr27% er27% clean] नामांकन क्रम/ Enrolment No.: 0000/00682/76157
+  2: [hr0% er100% clean] To
+  3: [hr100% er0% clean] आशीष कुमार
+  4: [hr0% er100% clean] Ashish Kumar
+  5: [hr0% er75% clean] S/O- NAND LAL,
+  6: [hr0% er83% clean] JIUTI,
+  7: [hr0% er92% clean] BHATAULI ROAD,
+  8: [hr0% er91% clean] POST SANDWA,
+  9: [hr0% er85% clean] VTC: Mirzapur,
+ 10: [hr0% er83% clean] PO: Mirzapur,
+ 11: [hr0% er89% clean] District: Mirzapur,
+ 12: [hr0% er89% clean] State: Uttar Pradesh,
+ 13: [hr0% er50% clean] PIN Code: 231001
+ 14: [hr0% er35% clean] Mobile: 9621715332
+ 15: [hr0% er100% clean] Signature Not Verified
+ 16: [hr0% er100% clean] Digitally signed by DS Unique
+ 17: [hr0% er100% clean] Identification Authority of India
+ 18: [hr0% er0% clean] 06
+ 19: [hr0% er17% clean] Date: 2026.07.24 09:11:03
+ 20: [hr0% er100% clean] IST
+ 21: [hr0% er0% clean] 2161 6070 0256
+ 22: [hr0% er15% clean] VID : 9149 4158 3186 3763
+ 23: [hr75% er0% clean] पता:
+ 24: [hr100% er0% clean] आशीष कुमार
+ 25: [hr85% er0% clean] एस/ओ - नन् द लाल, जउती, भटौली रोड, पो स्ट संदवा, मीज़ापुर,
+ 26: [hr0% er100% clean] Ashish Kumar
+ 27: [hr88% er0% clean] मीज़ापुर, मीज़ापुर,
+ 28: [hr61% er0% clean] उत्त र प्रदेश - 231001
+ 29: [hr29% er14% clean] जन् म तथ/DOB: 17/06/1999
+ 30: [hr0% er88% clean] Address:
+ 31: [hr50% er40% clean] पु रुष/ MALE
+ 32: [hr0% er86% clean] S/O- NAND LAL, JIUTI, BHATAULI ROAD, POST
+ 33: [hr0% er86% clean] SANDWA, Mirzapur, PO: Mirzapur, DIST: Mirzapur,
+ 34: [hr0% er63% clean] Uttar Pradesh - 231001
+ 35: [hr0% er50% clean] Details as on: 24/07/2026
+ 36: [hr0% er56% clean] Aadhaar no. issued: 02/03/2015
+ 37: [hr0% er0% clean] 2161 6070 0256
+ 38: [hr0% er0% clean] 2161 6070 0256
+ 39: [hr0% er15% clean] VID : 9149 4158 3186 3763
+
+DOB index: 28
+✓ Name (Hindi) : आशीष कुमार
+✓ Name (English): Ashish Kumar
+
+✓ Hindi Address (पता) lines:
+    एस/ओ - नन् द लाल, जउती, भटौली रोड, पो स्ट संदवा, मीज़ापुर,
+    मीज़ापुर, मीज़ापुर,
+    उत्त र प्रदेश - 231001
+
+✓ English Address lines:
+    S/O- NAND LAL,
+    JIUTI,
+    BHATAULI ROAD,
+    POST SANDWA,
+    VTC: Mirzapur,
+    PO: Mirzapur,
+    District: Mirzapur,
+    State: Uttar Pradesh,
+    PIN Code: 231001
+    Mobile: 9621715332
+    S/O- NAND LAL, JIUTI, BHATAULI ROAD, POST
+    SANDWA, Mirzapur, PO: Mirzapur, DIST: Mirzapur,
+    Uttar Pradesh - 231001
+
+✓ DOB/Gender line: जन् म तथ/DOB: 17/06/1999
