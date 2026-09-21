@@ -133,7 +133,7 @@
             border-radius: 14px;
             overflow: hidden;
             background: #fff;
-            box-shadow: 0 14px 40px rgba(0, 0, 0, .38);
+            box-shadow: none;
             transition: box-shadow .35s ease, outline .35s ease;
         }
 
@@ -141,11 +141,10 @@
             margin-bottom: 0;
         }
 
-        /* selected page — soft glow (koi red border nahi) */
+        /* selected page — koi border/glow nahi */
         .card.current {
-            box-shadow: 0 0 18px rgba(255, 255, 255, .35),
-                0 8px 26px rgba(233, 69, 96, .35),
-                0 20px 52px rgba(0, 0, 0, .45);
+            box-shadow: none;
+            outline: none;
         }
 
         /* background image — exactly original aspect ratio (no distortion) */
@@ -246,8 +245,8 @@
             top: var(--p1-photo-t);
             width: var(--p1-photo-w);
             height: var(--p1-photo-h);
-            border: 1px solid #b0b6bd;
-            background: #e8ebef;
+            border: none;
+            background: transparent;
             z-index: 30;
             cursor: move;
             touch-action: none;
@@ -310,14 +309,14 @@
         }
 
         /* =====================================================================
-   RIGHT — EDIT PANEL (330px, sticky)
+   RIGHT — EDIT PANEL (380px, sticky)
    ===================================================================== */
         .panel {
-            width: 330px;
+            width: 450px;
             /* given fix */
-            min-width: 330px;
+            min-width: 450px;
             /* given fix */
-            flex: 0 0 330px;
+            flex: 0 0 450px;
             /* given fix */
             height: 100vh;
             /* given fix */
@@ -332,7 +331,7 @@
         }
 
         .panel h2 {
-            font-size: 14px;
+            font-size: 20px;
             color: #e94560;
             letter-spacing: 1px;
             margin: 0 0 12px;
@@ -342,7 +341,7 @@
 
         .panel h2 small {
             display: block;
-            font-size: 9px;
+            font-size: 11px;
             color: #7f8db0;
             letter-spacing: .5px;
             margin-top: 3px;
@@ -359,12 +358,12 @@
 
         .tab {
             flex: 1;
-            padding: 9px 6px;
+            padding: 11px 6px;
             border: 1px solid #0f3460;
             border-radius: 6px;
             background: #16284a;
             color: #8fa2c4;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 700;
             letter-spacing: 1px;
             cursor: pointer;
@@ -403,17 +402,17 @@
         }
 
         .upload-zone .icon {
-            font-size: 26px;
+            font-size: 30px;
         }
 
         .upload-zone p {
-            font-size: 11px;
+            font-size: 13px;
             color: #aab5d4;
             margin: 4px 0 0;
         }
 
         .upload-zone .small {
-            font-size: 9px;
+            font-size: 11px;
             color: #64718f;
             margin-top: 4px;
         }
@@ -445,7 +444,7 @@
         }
 
         .status-text {
-            font-size: 10px;
+            font-size: 12px;
             color: #e94560;
             margin-bottom: 8px;
             display: none;
@@ -454,7 +453,7 @@
 
         /* fields */
         .section-title {
-            font-size: 10px;
+            font-size: 12px;
             color: #7f8db0;
             letter-spacing: 1.5px;
             text-transform: uppercase;
@@ -464,27 +463,27 @@
         }
 
         .field {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .field label {
             display: block;
-            font-size: 9px;
+            font-size: 11px;
             color: #8fa2c4;
             letter-spacing: 1px;
             text-transform: uppercase;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .field input,
         .field textarea {
             width: 100%;
-            padding: 7px 8px;
+            padding: 9px 10px;
             background: #0a1226;
             border: 1px solid #233255;
             border-radius: 4px;
             color: #eee;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 500;
             font-family: Arial, sans-serif;
             outline: none;
@@ -498,14 +497,14 @@
 
         .field textarea {
             resize: vertical;
-            min-height: 46px;
+            min-height: 60px;
             line-height: 1.35;
         }
 
         .field .hint {
-            font-size: 9px;
+            font-size: 11px;
             color: #64718f;
-            margin-top: 2px;
+            margin-top: 3px;
         }
 
         /* buttons */
@@ -517,10 +516,10 @@
 
         .btn {
             flex: 1;
-            padding: 8px;
+            padding: 11px;
             border: none;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: .5px;
             cursor: pointer;
@@ -553,7 +552,18 @@
         }
 
         .btn-green:hover {
-            background: #11cc7e;
+            background: #12c97c;
+        }
+
+        .btn-amber {
+            background: linear-gradient(135deg, #ffc04d, #e8850f);
+            color: #3a2300;
+            border: 1px solid #c47a00;
+        }
+
+        .btn-amber:hover {
+            background: linear-gradient(135deg, #ffcf6e, #f5981d);
+            color: #3a2300;
         }
 
         .spinner {
@@ -670,6 +680,53 @@
             display: block;
         }
 
+        .photo-picker-body {
+            display: flex;
+            gap: 12px;
+            margin: 0 14px;
+            min-height: 200px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .photo-picker-body .crop-stage {
+            flex: 1;
+            margin: 0;
+            min-width: 280px;
+        }
+
+        .photo-zoom {
+            width: min(360px, 92%);
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: #0a1226;
+            border: 1px solid #233255;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .photo-zoom-head {
+            color: #4ecdc4;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+
+        .photo-zoom canvas {
+            background: #000;
+            border: 1px solid #233255;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .photo-zoom-info {
+            color: #aab5d4;
+            font-size: 11px;
+        }
+
         .crop-page {
             position: relative;
             display: inline-block;
@@ -729,12 +786,33 @@
             white-space: nowrap;
         }
 
+        .crop-box.photo-select-box {
+            border-color: #0fae6c;
+            border-width: 3px;
+        }
+
+        .crop-box.photo-select-box .crop-corner {
+            background: #0fae6c;
+        }
+
+        .crop-box.photo-select-box .crop-box-tag {
+            background: #0fae6c;
+        }
+
         .crop-foot {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
             padding: 10px 14px;
             border-top: 1px solid #0f3460;
+        }
+
+        .crop-foot .crop-btn {
+            flex: 0 1 auto;
+            padding: 9px 16px;
+            font-size: 12px;
         }
 
         .crop-btn {
@@ -898,7 +976,7 @@
             }
 
             .panel h2 {
-                font-size: 16px;
+                font-size: 22px;
             }
 
             .tabs {
@@ -1186,10 +1264,16 @@
         <div class="field">
             <label>📷 Photo (Page 1)</label>
             <div class="btn-row">
-                <button class="btn btn-blue" onclick="document.getElementById('photoInput').click()">📷 Upload
-                    Photo</button>
+                <button class="btn btn-green" onclick="photoPickOrAuto()">⚡ Auto Pick</button>
+                <button class="btn btn-amber" onclick="openPhotoPicker()">✂️ Box Se Photo Select</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-blue" onclick="document.getElementById('photoInput').click()">🖼️ Upload</button>
                 <button class="btn btn-red" onclick="resetPhoto()">✖ Remove</button>
             </div>
+            <div class="hint">⚡ Auto Pick — PDF se photo auto-crop (left side se). ✂️ <b>Box Se Select</b> — PDF page
+                par green box ko photo ke upar kheench kar set karo (100% sahi, side 🔍 zoom preview ke sath).
+                🖼️ Upload — koi nayi image file chuno.</div>
             <input type="file" id="photoInput" accept="image/*" style="display:none;">
             <div class="hint">Card par photo ko drag karke move karo, corner handle se size badalo — export mein bhi
                 save rehta hai</div>
@@ -1291,13 +1375,45 @@ Uttar Pradesh - 231313</textarea>
             </div>
             <div class="crop-tools">
                 <span class="crop-page-label">🔴 <b>Ek hi box</b> mein dono cards (front + back) rakho — data ek saath
-                    extract hoga, Page 1 &amp; Page 2 dono update honge.</span>
+                    extract
+                    hoga, Page 1 &amp; Page 2 dono update honge. 📷 Photo "Photo Set Karo" button se set hogi.</span>
                 <span style="flex:1"></span>
-                <button class="crop-btn accent" onclick="cropAndExtract()">✂️ OCR se Data Nikalo (Page 1 + 2)</button>
             </div>
             <div class="crop-stage" id="cropStage"></div>
             <div class="crop-foot">
                 <button class="crop-btn accent2" onclick="cropAndExtract()">✔ Done</button>
+                <button class="crop-btn accent" onclick="cropAndExtract()">✂️ OCR se Data Nikalo (Page 1 + 2)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- PHOTO PICKER MODAL — green box kheench kar EXACT photo select   -->
+    <!-- ============================================================== -->
+    <div class="crop-modal" id="photoModal">
+        <div class="crop-modal-box">
+            <div class="crop-head">
+                <span id="photoCropTitle">📷 Photo EXACT Select Karo</span>
+                <button class="crop-btn" onclick="closePhotoPicker()">✖ Close</button>
+            </div>
+            <div class="crop-tools">
+                <span class="crop-page-label">🟢 <b>Green box</b> ko photo ke upar exactly rakho (kheenchkar bada/chhota
+                    karo) → "✔ Photo Lagao". Right side 🔍 zoom preview mein EXACT crop dikhta hai.</span>
+                <span id="photoPageNav"
+                    style="flex:1;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;"></span>
+            </div>
+            <div class="photo-picker-body">
+                <div class="crop-stage" id="photoCropStage"></div>
+                <div class="photo-zoom">
+                    <div class="photo-zoom-head">🔍 Zoom Preview — yahi crop milegi</div>
+                    <canvas id="photoZoomCv"></canvas>
+                    <div class="photo-zoom-info" id="photoZoomInfo"></div>
+                </div>
+            </div>
+            <div class="crop-foot">
+                <button class="crop-btn" onclick="document.getElementById('photoInput').click()">🖼️ Naya Image
+                    Upload</button>
+                <button class="crop-btn accent2" onclick="applyPickedPhoto()">✔ Photo Lagao</button>
             </div>
         </div>
     </div>
@@ -1521,6 +1637,381 @@ Uttar Pradesh - 231313</textarea>
             if (photoInput) photoInput.value = '';
         }
 
+        /* Extracted photo (dataURL) ko Page-1 card par set karo */
+        function applyPhotoDataURL(url) {
+            var p = el('p1Photo');
+            if (p && url) p.src = url;
+        }
+
+        /* =====================================================================
+           AUTO PHOTO EXTRACT — cropped FRONT card (top-right aadhaar style) se
+           photo ki image nikaal kar Page-1 ke photo box par auto-set karo.
+           Method: connected-component (blob) analysis — photo ek solid bordered
+           box hota hai. Score: front card = top region + right side + photo-like
+           aspect ratio + solid fill. Agar detect na ho to null (photo wahi rehti).
+           ===================================================================== */
+        function extractPhotoFromCrop(cv, region) {
+            if (!cv || !cv.width || !cv.height) return null;
+
+            var rg = region || detectPhotoRegion(cv);
+            if (!rg) return null;
+
+            /* EXACT crop — koi padding nahi (side/white area na aaye) */
+            var sx = Math.max(0, rg.x);
+            var sy = Math.max(0, rg.y);
+            var sw = Math.min(cv.width - sx, rg.w);
+            var sh = Math.min(cv.height - sy, rg.h);
+            if (sw < 10 || sh < 10) return null;
+
+            var out = document.createElement('canvas');
+            out.width = sw; out.height = sh;
+            out.getContext('2d').drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
+            return out.toDataURL('image/png');
+        }
+
+        /* =====================================================================
+           DETECT PHOTO REGION — connected-component (blob) analysis. Photo ek
+           solid bordered box hota hai card ke top-right. {x,y,w,h} natural pixels
+           me deta hai, ya null. Crop box ke green select par isse pre-set karte hai.
+           ===================================================================== */
+        function detectPhotoRegion(cv) {
+            if (!cv || !cv.width || !cv.height) return null;
+
+            var W = cv.width, H = cv.height;
+            var scale = Math.min(1, 560 / W);
+            var w = Math.max(1, Math.round(W * scale));
+            var h = Math.max(1, Math.round(H * scale));
+
+            var src = document.createElement('canvas');
+            src.width = w; src.height = h;
+            var sctx = src.getContext('2d');
+            sctx.drawImage(cv, 0, 0, w, h);
+            var img = sctx.getImageData(0, 0, w, h).data;
+
+            /* binary mask: non-white pixels */
+            var mask = new Uint8Array(w * h);
+            for (var y = 0; y < h; y++) {
+                for (var x = 0; x < w; x++) {
+                    var i = (y * w + x) * 4;
+                    if (img[i + 3] > 200 && !(img[i] > 236 && img[i + 1] > 236 && img[i + 2] > 236)) {
+                        mask[y * w + x] = 1;
+                    }
+                }
+            }
+
+            /* connected components (8-connected BFS) */
+            var comps = [];
+            var seen = new Uint8Array(w * h);
+            for (var y0 = 0; y0 < h; y0++) {
+                for (var x0 = 0; x0 < w; x0++) {
+                    var idx0 = y0 * w + x0;
+                    if (!mask[idx0] || seen[idx0]) continue;
+                    var queue = [idx0];
+                    seen[idx0] = 1;
+                    var cnt = 0, minX = x0, maxX = x0, minY = y0, maxY = y0;
+                    while (queue.length) {
+                        var c = queue.pop();
+                        var cx = c % w, cy = (c / w) | 0;
+                        cnt++;
+                        if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+                        if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
+                        for (var dy = -1; dy <= 1; dy++) {
+                            var ny = cy + dy; if (ny < 0 || ny >= h) continue;
+                            for (var dx = -1; dx <= 1; dx++) {
+                                var nx = cx + dx; if (nx < 0 || nx >= w) continue;
+                                var ni = ny * w + nx;
+                                if (mask[ni] && !seen[ni]) { seen[ni] = 1; queue.push(ni); }
+                            }
+                        }
+                    }
+                    comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, cnt: cnt });
+                }
+            }
+
+            var areaW = w * h;
+
+            /* ---- card layout detect: side-by-side (left/right) ya stacked (top/bottom) ----
+               photo humesha pehle card ke top-right quadrant mein hota hai.
+               pehla card = side-by-side mein LEFT, stacked mein TOP. */
+            var cardRects = [{ x: 0, y: 0, w: w, h: h }];
+            try {
+                var fullRect = { x: 0, y: 0, w: w, h: h };
+                var colPair = splitTwoCards(src, fullRect);   /* left | right */
+                var rowPair = splitTwoRows(src, fullRect);    /* top / bottom */
+                if (colPair && colPair.length === 2) {
+                    cardRects = colPair;
+                } else if (rowPair && rowPair.length === 2) {
+                    cardRects = rowPair;
+                } else {
+                    /* gap na mile to full-page pehle + half-page rects — LEFT-first */
+                    var hw = Math.round(w / 2), hh = Math.round(h / 2);
+                    cardRects = [{ x: 0, y: 0, w: w, h: h },
+                    { x: 0, y: 0, w: hw, h: h },
+                    { x: hw, y: 0, w: w - hw, h: h },
+                    { x: 0, y: 0, w: hw, h: hh },
+                    { x: 0, y: hh, w: hw, h: h - hh },
+                    { x: hw, y: 0, w: w - hw, h: hh },
+                    { x: hw, y: hh, w: w - hw, h: h - hh }];
+                }
+            } catch (e) { }
+
+            /* ---- blob ke andar pixels ka nature: QR = binary black/white blocks,
+               photo = colorful/mid-tone. Ye QR ko photo se alag karta hai. ---- */
+            function sampleStats(cc2) {
+                var nb = Math.max(1, Math.round(cc2.w / 20));
+                var nh = Math.max(1, Math.round(cc2.h / 20));
+                var n = 0, binary = 0, colorful = 0;
+                for (var sy = cc2.y; sy < cc2.y + cc2.h; sy += nh) {
+                    for (var sx = cc2.x; sx < cc2.x + cc2.w; sx += nb) {
+                        var ii = (sy * w + sx) * 4;
+                        var r = img[ii], g = img[ii + 1], b = img[ii + 2];
+                        var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+                        n++;
+                        if (mn > 215 || mx < 40) binary++;      /* pure white/black */
+                        if ((mx - mn) > 25) colorful++;         /* coloured (photo) */
+                    }
+                }
+                return { binary: n ? binary / n : 0, colorful: n ? colorful / n : 0 };
+            }
+
+            var best = null, bestScore = -1;
+            /* photo SIRF LEFT side se pick hota hai (QR right side kabhi nahi).
+               left mein kuch na mile to hi pura page try hota hai (fallback). */
+            var leftOnly = true;
+            for (var pass = 0; pass < 2; pass++) {
+                best = null; bestScore = -1;
+                for (var ci = 0; ci < comps.length; ci++) {
+                    var cc = comps[ci];
+                    if (cc.cnt < areaW * 0.004) continue;
+                    var bw = cc.w, bh = cc.h;
+                    if (bh > h * 0.62 || bw > w * 0.65) continue;   /* poori card zyada bada */
+                    if (bh < h * 0.05 || bw < w * 0.04) continue;  /* bahut chhota (logo/emblem/ik symbol) */
+                    var aspect = bw / bh;
+                    if (aspect < 0.45 || aspect > 1.8) continue;    /* photo = approx 0.7-1.0 */
+                    var fill = cc.cnt / (bw * bh);
+                    if (fill < 0.10) continue;                       /* hollow border frame — skip */
+
+                    var cy2 = cc.y + bh / 2, cx2 = cc.x + bw / 2;
+                    if (leftOnly && (cx2 >= w * 0.5 || cx2 < w * 0.1)) continue;   /* LEFT side band */
+
+                    var st = sampleStats(cc);
+
+                    /* layout-aware scoring: pehle page ke card(s) detect karo */
+                    var score = 0;
+                    score += Math.max(0, fill - 0.3) * 12;           /* solid block */
+                    score += Math.min(30, Math.log(cc.cnt) / Math.log(areaW) * 30);  /* size */
+                    score += Math.max(0, 6 - (Math.abs(aspect - 0.8) * 6));           /* photo aspect */
+                    score += st.colorful * 22;                       /* REAL photo = colorful */
+                    if (st.binary > 0.55 && st.colorful < 0.10) score -= 45;   /* QR/graphic penalty */
+                    if (cx2 < w * 0.5) score += 12;                 /* user layout: photo LEFT side */
+
+                    /* blob is card-region? Find best (card, expected photo point).
+                       Photo = pehle card (left/top) ke top-right quadrant mein. */
+                    var bestLoc = null, bestLocScore = -1;
+                    for (var ci2 = 0; ci2 < cardRects.length; ci2++) {
+                        var card = cardRects[ci2];
+                        /* exp photo center: card ke top-right (0.82 * width, 0.34 * height) */
+                        var ex = card.x + card.w * 0.82;
+                        var ey = card.y + card.h * 0.34;
+                        var dxr = (cx2 - ex) / card.w;
+                        var dyr = (cy2 - ey) / card.h;
+                        var ds = Math.sqrt(dxr * dxr + dyr * dyr);
+                        var lscore = 30 - ds * 50;      /* closer = better */
+                        lscore -= ci2 * 8;              /* pehla card (left/top) thoda prefer */
+                        if (lscore > bestLocScore) { bestLocScore = lscore; bestLoc = card; }
+                    }
+                    score += Math.max(0, bestLocScore);
+
+                    if (score > bestScore) { bestScore = score; best = cc; }
+                }
+                if (best) break;
+                leftOnly = false;      /* left mein kuch na mile to hi right side try karo */
+            }
+            if (!best) return null;
+
+            var k = 1 / scale;
+            return {
+                x: Math.round(best.x * k),
+                y: Math.round(best.y * k),
+                w: Math.round(best.w * k),
+                h: Math.round(best.h * k)
+            };
+        }
+
+        /* =====================================================================
+   PHOTO BUTTON — click karte hi loaded PDF/page se photo auto-pick karke
+   set karo (bilkul crop ke bina). PDF na ho to manual file dialog khulta hai.
+   ===================================================================== */
+        function photoPickOrAuto() {
+            if (pdfPageCanvases.length && autoPickPhotoFromPdf()) {
+                flashStatus('✅ Photo PDF se auto-pick ho gayi!');
+            } else if (pdfPageCanvases.length) {
+                openPhotoPicker();
+            } else {
+                var fi = el('photoInput');
+                if (fi) fi.click();
+            }
+        }
+
+        function autoPickPhotoFromPdf() {
+            for (var pi = 0; pi < pdfPageCanvases.length; pi++) {
+                try {
+                    var rg = detectPhotoRegion(pdfPageCanvases[pi]);
+                    if (!rg) continue;
+                    var url = extractPhotoFromCrop(pdfPageCanvases[pi], rg);
+                    if (url) { applyPhotoDataURL(url); return true; }
+                } catch (e) { }
+            }
+            return false;
+        }
+
+        function flashStatus(msg) {
+            showProgress(msg);
+            updateProgress(100);
+            var bar = el('progressBar'), st = el('statusText');
+            setTimeout(function () {
+                if (bar) bar.style.display = 'none';
+                if (st) st.style.display = 'none';
+            }, 2500);
+        }
+
+        /* =====================================================================
+           PHOTO PICKER MODAL — PDF page par GREEN box kheench kar EXACT photo
+           select karo. Auto-detect box pre-set milta hai (left side), par user
+           khud bhi adjust kar sakta hai. 100% reliable — kabhi galat nahi hota.
+           ===================================================================== */
+        var photoPickerBoxes = [];
+        var photoPickerPageIdx = 0;
+
+        function openPhotoPicker() {
+            var m = el('photoModal');
+            if (!m) return;
+            if (!pdfPageCanvases.length) {
+                alert('Pehle PDF upload karein!');
+                var fi = el('photoInput');
+                if (fi) fi.click();
+                return;
+            }
+            photoPickerPageIdx = 0;
+            buildPhotoStage(0);
+            m.style.display = 'flex';
+        }
+
+        function closePhotoPicker() {
+            var m = el('photoModal');
+            if (m) m.style.display = 'none';
+        }
+
+        function photoPickerPage(i) {
+            if (i < 0 || i >= pdfPageCanvases.length) return;
+            photoPickerPageIdx = i;
+            buildPhotoStage(i);
+        }
+
+        function buildPhotoStage(pageIdx) {
+            var stage = el('photoCropStage');
+            if (!stage) return;
+            stage.innerHTML = '';
+            photoPickerBoxes = [];
+
+            /* page nav chips — sirf jab 1 se zyada pages ho */
+            var nav = el('photoPageNav');
+            if (nav) {
+                nav.innerHTML = '';
+                if (pdfPageCanvases.length > 1) {
+                    for (var i = 0; i < pdfPageCanvases.length; i++) {
+                        (function (n) {
+                            var b = document.createElement('button');
+                            b.className = 'crop-btn' + (n === pageIdx ? ' accent2' : '');
+                            b.textContent = 'Page ' + (n + 1);
+                            b.onclick = function () { photoPickerPage(n); };
+                            nav.appendChild(b);
+                        })(i);
+                    }
+                }
+            }
+
+            var cv = pdfPageCanvases[pageIdx];
+            var availH = Math.max(300, (window.innerHeight || 700) - 250);
+            var kk = availH / cv.height;
+            if (kk > 1.25) kk = 1.25;
+            var dispW = Math.max(120, Math.round(cv.width * kk));
+            var dispH = Math.round(cv.height * kk);
+
+            var wrap = document.createElement('div');
+            wrap.className = 'crop-page';
+            wrap.style.width = dispW + 'px';
+            wrap.style.height = dispH + 'px';
+
+            var cvs = document.createElement('canvas');
+            cvs.width = cv.width; cvs.height = cv.height;
+            cvs.getContext('2d').drawImage(cv, 0, 0);
+            cvs.style.width = dispW + 'px';
+            cvs.style.height = dispH + 'px';
+            cvs.style.display = 'block';
+            wrap.appendChild(cvs);
+
+            /* auto-detect box pre-set (photo LEFT side) — na mile to default left box */
+            var region = null;
+            try { region = detectPhotoRegion(cv); } catch (e) { region = null; }
+            if (!region) {
+                region = {
+                    x: Math.round(cv.width * 0.24),
+                    y: Math.round(cv.height * 0.03),
+                    w: Math.round(cv.height * 0.42),
+                    h: Math.round(cv.height * 0.55)
+                };
+            }
+            /* box ko bilkul free rakho — bahut chhota photo bhi EXACT crop ho sake (minSize 12px) */
+            photoPickerBoxes.push(addCropBox(wrap, cv, dispW, dispH, region, 'Photo', pageIdx, null, 'photo-select-box', 12, updatePhotoZoom));
+            stage.appendChild(wrap);
+
+            /* zoom preview canvas size + pehla frame */
+            var cvz = el('photoZoomCv');
+            if (cvz) { cvz.width = 360; cvz.height = 460; }
+            updatePhotoZoom();
+        }
+
+        function updatePhotoZoom() {
+            var item = photoPickerBoxes[0];
+            var cvz = el('photoZoomCv'), info = el('photoZoomInfo');
+            if (!item || !cvz) return;
+            var rect = rectOfItem(item);
+            if (!rect || rect.w < 4 || rect.h < 4) return;
+
+            /* green box ke aas-paas thoda margin lekar zoom karo (context dikhe) */
+            var vm = Math.max(30, Math.round(Math.max(rect.w, rect.h) * 0.45));
+            var vx = Math.max(0, rect.x - vm), vy = Math.max(0, rect.y - vm);
+            var vw = Math.min(item.cv.width - vx, rect.w + vm * 2);
+            var vh = Math.min(item.cv.height - vy, rect.h + vm * 2);
+
+            var PW = cvz.width, PH = cvz.height;
+            var c2 = cvz.getContext('2d');
+            c2.imageSmoothingEnabled = false;   /* crisp zoom */
+            c2.fillStyle = '#000';
+            c2.fillRect(0, 0, PW, PH);
+            var k = Math.min(PW / vw, PH / vh);
+            var dx = (PW - vw * k) / 2, dy = (PH - vh * k) / 2;
+            c2.drawImage(item.cv, vx, vy, vw, vh, dx, dy, vw * k, vh * k);
+
+            c2.strokeStyle = '#0fae6c';
+            c2.lineWidth = 3;
+            c2.strokeRect(dx + (rect.x - vx) * k, dy + (rect.y - vy) * k, rect.w * k, rect.h * k);
+
+            if (info) info.textContent = 'Crop: ' + rect.w + ' x ' + rect.h + ' px   |   Zoom ' + k.toFixed(1) + 'x';
+        }
+
+        function applyPickedPhoto() {
+            var item = photoPickerBoxes[0];
+            if (!item) { closePhotoPicker(); return; }
+            var rect = rectOfItem(item);
+            var url = extractPhotoFromCrop(item.cv, rect);
+            if (!url) { alert('Box adjust karke wapas try karo — photo jo box ke andar hai wahi milegi.'); return; }
+            applyPhotoDataURL(url);
+            flashStatus('✅ Photo EXACT box se set ho gayi!');
+            closePhotoPicker();
+        }
+
         /* =====================================================================
            PHOTO DRAG/RESIZE — photo ko card par khinch kar move karo,
            corner handle se size banao. Result CSS variables --p1-photo-* par
@@ -1643,12 +2134,12 @@ Uttar Pradesh - 231313</textarea>
             }
 
             var ttl = el('cropTitle');
-            if (ttl) ttl.textContent = '✂️ Ek box mein dono cards select karo (front + back)';
+            if (ttl) ttl.textContent = '✂️ Lal box mein dono cards select karo (front + back)';
         }
 
-        function addCropBox(wrap, cv, dispW, dispH, region, label, pdfPageIdx, cardTarget) {
+        function addCropBox(wrap, cv, dispW, dispH, region, label, pdfPageIdx, cardTarget, boxClass, minSize, onUpdate) {
             var box = document.createElement('div');
-            box.className = 'crop-box';
+            box.className = 'crop-box' + (boxClass ? ' ' + boxClass : '');
             var hnd = document.createElement('div');
             hnd.className = 'crop-corner';
             box.appendChild(hnd);
@@ -1660,14 +2151,15 @@ Uttar Pradesh - 231313</textarea>
             }
             if (pdfPageIdx == null) pdfPageIdx = 0;
             if (cardTarget == null) cardTarget = 0;
+            if (minSize == null) minSize = 80;
 
             var sk = cv.width / dispW;
             var bx, by, bw, bh;
             if (region) {
                 bx = Math.round(region.x / sk); by = Math.round(region.y / sk);
                 bw = Math.round(region.w / sk); bh = Math.round(region.h / sk);
-                bx = Math.max(0, Math.min(bx, dispW - 80)); by = Math.max(0, Math.min(by, dispH - 80));
-                bw = Math.max(80, Math.min(bw, dispW - bx)); bh = Math.max(80, Math.min(bh, dispH - by));
+                bx = Math.max(0, Math.min(bx, dispW - minSize)); by = Math.max(0, Math.min(by, dispH - minSize));
+                bw = Math.max(minSize, Math.min(bw, dispW - bx)); bh = Math.max(minSize, Math.min(bh, dispH - by));
             } else {
                 bw = Math.round(dispW * 0.92); bh = Math.round(dispH * 0.86);
                 bx = Math.round((dispW - bw) / 2); by = Math.round((dispH - bh) / 2);
@@ -1677,13 +2169,14 @@ Uttar Pradesh - 231313</textarea>
             box.style.width = bw + 'px';
             box.style.height = bh + 'px';
 
-            attachCropDrag(box, hnd, dispW, dispH);
+            attachCropDrag(box, hnd, dispW, dispH, minSize, onUpdate);
             wrap.appendChild(box);
             return { cv: cv, box: box, dispW: dispW, dispH: dispH, pdfPageIdx: pdfPageIdx, cardTarget: cardTarget };
         }
 
-        function attachCropDrag(box, hnd, dispW, dispH) {
+        function attachCropDrag(box, hnd, dispW, dispH, minSize, onUpdate) {
             var mode = null, sx = 0, sy = 0, bx = 0, by = 0, bw = 0, bh = 0;
+            if (minSize == null) minSize = 60;
 
             function start(e, m) {
                 mode = m; sx = e.clientX; sy = e.clientY;
@@ -1708,10 +2201,11 @@ Uttar Pradesh - 231313</textarea>
                     var t = Math.max(0, Math.min(by + dy, dispH - bh));
                     box.style.left = l + 'px'; box.style.top = t + 'px';
                 } else {
-                    var w = Math.max(60, Math.min(bw + dx, dispW - bx));
-                    var h = Math.max(60, Math.min(bh + dy, dispH - by));
+                    var w = Math.max(minSize, Math.min(bw + dx, dispW - bx));
+                    var h = Math.max(minSize, Math.min(bh + dy, dispH - by));
                     box.style.width = w + 'px'; box.style.height = h + 'px';
                 }
+                if (onUpdate) onUpdate();
             });
             function end() { mode = null; }
             box.addEventListener('pointerup', end);
@@ -1917,7 +2411,7 @@ Uttar Pradesh - 231313</textarea>
                     return;
                 }
                 updateProgress(100);
-                showProgress('✅ Data update — Page 1 & 2 text + side inputs (image same rahegi)');
+                showProgress('✅ Data update — Page 1 & 2 text + side inputs');
                 closeCropper();
             } finally {
                 cropExtractBusy = false;
