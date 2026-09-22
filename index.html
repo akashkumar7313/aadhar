@@ -1265,16 +1265,13 @@
         <div class="field">
             <label>📷 Photo (Page 1)</label>
             <div class="btn-row">
-                <button class="btn btn-green" onclick="photoPickOrAuto()">⚡ Auto Pick</button>
                 <button class="btn btn-amber" onclick="openPhotoPicker()">✂️ Box Se Photo Select</button>
-            </div>
-            <div class="btn-row">
                 <button class="btn btn-blue" onclick="document.getElementById('photoInput').click()">🖼️ Upload</button>
                 <button class="btn btn-red" onclick="resetPhoto()">✖ Remove</button>
             </div>
-            <div class="hint">⚡ Auto Pick — PDF se photo auto-crop (left side se). ✂️ <b>Box Se Select</b> — PDF page
-                par green box ko photo ke upar kheench kar set karo (100% sahi, side 🔍 zoom preview ke sath).
-                🖼️ Upload — koi nayi image file chuno.</div>
+            <div class="hint">PDF crop ke baad photo <b>apne-aap</b> pick ho jaati hai. Agar galat (jaise QR) aa
+                jaaye to ✂️ <b>Box Se Photo Select</b> se green box ko photo ke upar kheench kar sahi photo laga do
+                (100% sahi, side 🔍 zoom preview ke sath). 🖼️ Upload — koi nayi image file chuno.</div>
             <input type="file" id="photoInput" accept="image/*" style="display:none;">
             <div class="hint">Card par photo ko drag karke move karo, corner handle se size badalo — export mein bhi
                 save rehta hai</div>
@@ -1840,30 +1837,54 @@ Uttar Pradesh - 231313</textarea>
         }
 
         /* =====================================================================
-   PHOTO BUTTON — click karte hi loaded PDF/page se photo auto-pick karke
-   set karo (bilkul crop ke bina). PDF na ho to manual file dialog khulta hai.
+   PHOTO AUTO-PICK — crop/extract ke baad apne-aap chalta hai: loaded PDF/jpage
+   se photo detect karke Page-1 par set. Agar detect na ho (ya galat — jaise QR
+   aa jaaye) to user ✂️ Box Se Photo Select se manual sahi photo laga leta hai.
    ===================================================================== */
-        function photoPickOrAuto() {
-            if (pdfPageCanvases.length && autoPickPhotoFromPdf()) {
-                flashStatus('✅ Photo PDF se auto-pick ho gayi!');
-            } else if (pdfPageCanvases.length) {
-                openPhotoPicker();
-            } else {
-                var fi = el('photoInput');
-                if (fi) fi.click();
-            }
-        }
-
         function autoPickPhotoFromPdf() {
             for (var pi = 0; pi < pdfPageCanvases.length; pi++) {
                 try {
                     var rg = detectPhotoRegion(pdfPageCanvases[pi]);
                     if (!rg) continue;
+                    /* QR guard — jo detected area QR jaisa ho (binary black/white blocks)
+                       use photo ki jagah kabhi nahi lagate. Is case mein is page ko skip
+                       karo taaki user ✂️ Box Se Photo Select se sahi photo laga sake. */
+                    var qrLike = isRegionQRLike(pdfPageCanvases[pi], rg);
+                    if (qrLike) continue;
                     var url = extractPhotoFromCrop(pdfPageCanvases[pi], rg);
                     if (url) { applyPhotoDataURL(url); return true; }
                 } catch (e) { }
             }
             return false;
+        }
+
+        function isRegionQRLike(cv, rg) {
+            if (!cv || !rg || !rg.w || !rg.h) return false;
+            var scale = Math.min(1, 280 / Math.max(rg.w, rg.h));
+            var w = Math.max(8, Math.round(rg.w * scale));
+            var h = Math.max(8, Math.round(rg.h * scale));
+            var src = document.createElement('canvas');
+            src.width = w; src.height = h;
+            var sctx = src.getContext('2d');
+            try {
+                sctx.drawImage(cv, rg.x, rg.y, rg.w, rg.h, 0, 0, w, h);
+                var img = sctx.getImageData(0, 0, w, h).data;
+            } catch (e) { return false; }
+            var n = 0, binary = 0, colorful = 0, mid = 0;
+            for (var y = 0; y < h; y++) {
+                for (var x = 0; x < w; x++) {
+                    var i = (y * w + x) * 4;
+                    var r = img[i], g = img[i + 1], b = img[i + 2];
+                    var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+                    n++;
+                    if (mn > 215 || mx < 40) binary++;
+                    if ((mx - mn) > 25) colorful++;
+                    if (mn > 40 && mx < 215) mid++;
+                }
+            }
+            if (!n) return false;
+            var br = binary / n, cf = colorful / n, mf = mid / n;
+            return br > 0.5 && cf < 0.12 && mf < 0.4;
         }
 
         function flashStatus(msg) {
@@ -2372,23 +2393,60 @@ Uttar Pradesh - 231313</textarea>
             return itemsToText(picked, vpW);
         }
 
-        /* DD/MM/YYYY ya similar */
+        /* DD/MM/YYYY ya similar — line-parsed, date validity ke saath taaki
+           swap/mismatch na ho (Issued vs Details kabhi ulat na jaayein) */
+        function _isValidDMY(d, m, y) {
+            if (!(d >= 1 && d <= 31) || !(m >= 1 && m <= 12)) return false;
+            if (y < 1900 || y > 2199) return false;
+            var days = [31, (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            return d <= days[m - 1];
+        }
+        function _normDate(s) {
+            if (!s) return null;
+            var m = String(s).match(/(\d{1,2})[\s\/\-\.]+(\d{1,2})[\s\/\-\.]+(\d{4})/);
+            if (!m) return null;
+            var d = parseInt(m[1], 10), mo = parseInt(m[2], 10), y = parseInt(m[3], 10);
+            if (!_isValidDMY(d, mo, y)) return null;
+            return (d < 10 ? '0' + d : d) + '/' + (mo < 10 ? '0' + mo : mo) + '/' + y;
+        }
         function extractDateFromText(text, kind) {
             if (!text) return null;
             var t = text.replace(/\s+/g, ' ');
-            if (kind === 'issued') {
-                var m = t.match(/(?:Aadhaar\s*no\.?\s*)?issued[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
-                if (m) return m[1];
-                m = t.match(/issued[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
-                if (m) return m[1];
+            var lines = text.split(/\n+/).map(function (l) { return l.replace(/\s+/g, ' ').trim(); })
+                .filter(function (l) { return l.length > 0; });
+
+            /* har line par label-dhundo + valid date. Ye crossover-swap (front ka
+               date back ko, back ka date front ko) rok deta hai. */
+            function firstDateAfter(needleRe, fromIndex) {
+                for (var li = 0; li < lines.length; li++) {
+                    if (li < fromIndex || !needleRe.test(lines[li])) continue;
+                    var m = lines[li].match(/(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/);
+                    if (m) { var d = _normDate(m[1]); if (d) return d; }
+                }
+                return null;
             }
+
+            if (kind === 'issued') {
+                var d = firstDateAfter(/issued/i, 0);
+                if (d) return d;
+                /* fallback: seedha "issued" keyword ke baad pakdo */
+                var m = t.match(/issued[^0-9]{0,30}(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/i);
+                if (m) { var d2 = _normDate(m[1]); if (d2) return d2; }
+            }
+
             if (kind === 'details') {
-                var d = t.match(/Details\s+as\s+on[^0-9]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
-                if (d) return d[1];
-                d = t.match(/Details\s+as\s+on[^0-9]*([\d\/\-\.]{8,12})/i);
-                if (d) return d[1];
-                d = t.match(/as\s+on[^0-9]{0,20}(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i);
-                if (d) return d[1];
+                var d = firstDateAfter(/Details\s+as\s+on/i, 0);
+                if (d) return d;
+                var m = t.match(/Details\s+as\s+on[^0-9]{0,30}(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/i);
+                if (m) { var d2 = _normDate(m[1]); if (d2) return d2; }
+                var d = firstDateAfter(/\bas\s+on\b/i, 0);
+                if (d) return d;
+                var m2 = t.match(/\bas\s+on\b[^0-9]{0,30}(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/i);
+                if (m2) { var d3 = _normDate(m2[1]); if (d3) return d3; }
+                /* least preference: koi bhi valid date (sirf jab label bilkul na mile) */
+                var tail = t.slice(-160);
+                var m3 = tail.match(/(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/);
+                if (m3) { var d4 = _normDate(m3[1]); if (d4) return d4; }
             }
             return null;
         }
@@ -2411,8 +2469,13 @@ Uttar Pradesh - 231313</textarea>
                     showProgress('⚠️ OCR se text nahi mila — box dono cards par set karke dubara try karein.');
                     return;
                 }
-                updateProgress(100);
-                showProgress('✅ Data update — Page 1 & 2 text + side inputs');
+                if (autoPickPhotoFromPdf()) {
+                    updateProgress(100);
+                    showProgress('✅ Data update + Photo auto-pick ho gayi (galat ho to Box Se Photo Select).');
+                } else {
+                    updateProgress(100);
+                    showProgress('✅ Data update — Page 1 & 2 text + side inputs');
+                }
                 closeCropper();
             } finally {
                 cropExtractBusy = false;
@@ -2971,6 +3034,57 @@ Uttar Pradesh - 231313</textarea>
         window.addEventListener('orientationchange', function () { setTimeout(computeCardZoom, 150); });
 
         /* =====================================================================
+           VERTICAL LABELS EXPORT FIX — html2canvas ko writing-mode support nahi,
+           isliye download/print me vertical text ikkatte chars bankar bilkul alag
+           aata tha. Ab download se pehle vertical labels ko per-character stacked
+           spans me badal dete hai (html2canvas 100% sahi render karta hai), phir
+           restore kar dete hai.
+           ===================================================================== */
+        var VLABEL_IDS = ['p1Issued', 'prevDetails'];
+
+        function flattenVerticalLabels() {
+            VLABEL_IDS.forEach(function (id) {
+                var e = el(id);
+                if (!e) return;
+                var txt = e.textContent || '';
+                e.setAttribute('data-vlabel-text', txt);
+                e.setAttribute('data-vlabel-had', e.style.cssText);
+
+                e.style.writingMode = 'horizontal-tb';
+                e.style.transform = 'none';
+                e.style.display = 'flex';
+                e.style.flexDirection = 'column';
+                e.style.alignItems = 'flex-start';
+                e.style.lineHeight = '1.25';
+                e.style.height = 'auto';
+                e.style.whiteSpace = 'nowrap';
+
+                e.innerHTML = '';
+                for (var i = 0; i < txt.length; i++) {
+                    var s = document.createElement('span');
+                    s.textContent = txt.charAt(i);
+                    s.style.display = 'block';
+                    s.style.lineHeight = '1.25';
+                    e.appendChild(s);
+                }
+            });
+        }
+
+        function restoreVerticalLabels() {
+            VLABEL_IDS.forEach(function (id) {
+                var e = el(id);
+                if (!e) return;
+                var txt = e.getAttribute('data-vlabel-text');
+                if (txt == null) return;
+                e.innerHTML = txt;
+                e.removeAttribute('data-vlabel-text');
+                var prev = e.getAttribute('data-vlabel-had');
+                if (prev != null) { e.style.cssText = prev; }
+                e.removeAttribute('data-vlabel-had');
+            });
+        }
+
+        /* =====================================================================
            PNG EXPORT — html2canvas (dono cards + SAMPLE/DEMO watermark)
            ===================================================================== */
         async function downloadImage() {
@@ -2991,7 +3105,8 @@ Uttar Pradesh - 231313</textarea>
             updateProgress(20);
 
             try {
-                await new Promise(function (r) { setTimeout(r, 80); });
+                flattenVerticalLabels();
+                await new Promise(function (r) { setTimeout(r, 40); });
                 var c = await html2canvas(stack, {
                     scale: 2,
                     useCORS: true,
@@ -3025,6 +3140,7 @@ Uttar Pradesh - 231313</textarea>
             } catch (err) {
                 showProgress('❌ PNG download mein dikkat: ' + (err && err.message ? err.message : err));
             } finally {
+                restoreVerticalLabels();
                 stack.style.setProperty('--card-zoom', prevZoom || '');
                 b.classList.remove('exportRow');
                 if (hadA4) b.classList.add('a4mode');
@@ -3061,6 +3177,8 @@ Uttar Pradesh - 231313</textarea>
 
                 var shots = [];
                 var cards = [card1, card2];
+                flattenVerticalLabels();
+                await new Promise(function (r) { setTimeout(r, 40); });
                 for (var i = 0; i < cards.length; i++) {
                     var c = await html2canvas(cards[i], {
                         scale: 3,
@@ -3084,8 +3202,10 @@ Uttar Pradesh - 231313</textarea>
                 pdf.save('aadhaar-demo.pdf');
                 showProgress('✅ PDF download ho gaya!');
             } catch (err) {
+                restoreVerticalLabels();
                 showProgress('❌ PDF download mein dikkat: ' + (err && err.message ? err.message : err));
             } finally {
+                restoreVerticalLabels();
                 if (stack) stack.style.setProperty('--card-zoom', prevZoom || '');
             }
         }
