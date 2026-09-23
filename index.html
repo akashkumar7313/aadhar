@@ -2434,11 +2434,30 @@ Uttar Pradesh - 231313</textarea>
 
             /* har line par label-dhundo + valid date. Ye crossover-swap (front ka
                date back ko, back ka date front ko) rok deta hai. */
+            var DATE_RE = /(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/;
+
+            function dateAfterLabel(L, needleRe) {
+                /* label ke LAST occurrence ke END ke baad wala pehla date */
+                var fl = (needleRe.flags || '').replace(/[gim]/g, '');
+                var g = new RegExp(needleRe.source, fl + 'ig');
+                var lastEnd = -1, mi;
+                while ((mi = g.exec(L)) !== null) lastEnd = mi.index + mi[0].length;
+                if (lastEnd < 0) return null;
+                var m = L.slice(lastEnd, lastEnd + 48).match(DATE_RE);
+                if (!m) return null;
+                return _normDate(m[1]);
+            }
+
             function firstDateAfter(needleRe, fromIndex) {
                 for (var li = 0; li < lines.length; li++) {
-                    if (li < fromIndex || !needleRe.test(lines[li])) continue;
-                    var m = lines[li].match(/(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/);
-                    if (m) { var d = _normDate(m[1]); if (d) return d; }
+                    if (li < fromIndex) continue;
+                    var d = dateAfterLabel(lines[li], needleRe);
+                    if (d) return d;
+                    /* label line ke end par ho aur date agli line par aaye (OCR merge) */
+                    if (li + 1 < lines.length) {
+                        var d2 = dateAfterLabel(lines[li + 1], needleRe);
+                        if (d2) return d2;
+                    }
                 }
                 return null;
             }
@@ -2460,10 +2479,6 @@ Uttar Pradesh - 231313</textarea>
                 if (d) return d;
                 var m2 = t.match(/\bas\s+on\b[^0-9]{0,30}(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/i);
                 if (m2) { var d3 = _normDate(m2[1]); if (d3) return d3; }
-                /* least preference: koi bhi valid date (sirf jab label bilkul na mile) */
-                var tail = t.slice(-160);
-                var m3 = tail.match(/(\d{1,2}[\s\/\-\.]\d{1,2}[\s\/\-\.]\d{4})/);
-                if (m3) { var d4 = _normDate(m3[1]); if (d4) return d4; }
             }
             return null;
         }
