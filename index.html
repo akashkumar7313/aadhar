@@ -72,8 +72,8 @@
             /* Photo : height                                    */
 
             /* Demo Aadhaar Number — Page 1 par VID nahi hai, yahi number hota hai */
-            --p1-uid-l: 245px;
-            --p1-uid-b: 55px;
+            --p1-uid-l: 260px;
+            --p1-uid-b: 45px;
             --p1-uid-fs: 32px;
         }
 
@@ -1137,7 +1137,7 @@
                 <div class="p1 p1-gender" id="p1Gender">पुरुष / MALE</div>
 
                 <!-- Demo Aadhaar number — Page 1 par srif yahi number (VID nahi hai) -->
-                <div class="p1 p1-uid" id="p1Uid">XXXX XXXX XXXX</div>
+                <div class="p1 p1-uid" id="p1Uid">4365 6456 4575</div>
             </div>
 
             <!-- ========== PAGE 2 (BACK) — EXISTING DESIGN 100% PRESERVED ========== -->
@@ -1208,8 +1208,8 @@
 
                 <!-- DEMO NUMBER (original inline coordinates — unchanged) -->
                 <div id="prevAadhaar" class="text demo-id" style="
-              left:245px;
-              bottom:75px;
+              left:260px;
+              bottom:78px;
               font-size:32px;
               font-weight:900;
               letter-spacing:2px;
@@ -1222,14 +1222,15 @@
 
                 <!-- DEMO VID (original inline coordinates — unchanged) -->
                 <div id="prevVid" class="text id-number" style="
-              left:245px;
+              left:260px;
               bottom:55px;
               font-family:'Noto Serif Tamil','Latha','Vijaya',serif;
               font-weight:900;
               font-size:20px;
               color:#222;
+              letter-spacing: 1.3px;
           ">
-                    VID: XXXX XXXX XXXX XXXX
+                    VID : XXXX XXXX XXXX XXXX
                 </div>
 
             </div>
@@ -1456,7 +1457,7 @@ Uttar Pradesh - 231313</textarea>
             var hi = val('addressHi').replace(/\n/g, '<br>') || '';
             var en = val('addressEn').replace(/\n/g, '<br>') || '';
             var uid = val('aadhaarNo');
-            var vid = 'VID: ' + val('vidNo');
+            var vid = 'VID : ' + val('vidNo');
 
             /* ---- Page 1 overlays (front) — sirf Aadhaar number, VID nahi ---- */
             setText('p1Issued', val('issuedOn'));
