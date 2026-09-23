@@ -2249,6 +2249,7 @@ Uttar Pradesh - 231313</textarea>
             var fullCv = cropToCanvas(item.cv, rect.x, rect.y, rect.w, rect.h, 1612);
             var parts = [];
             var pdfPartOk = false;
+            var puaHindi = false;
 
             if (pdfPageTextItems.length) {
                 var pdfPart = extractPdfTextInRect(0, rect, item.cv);
@@ -2261,6 +2262,12 @@ Uttar Pradesh - 231313</textarea>
                     if (pl.length >= 2) {
                         parts.push(pdfPart);
                         pdfPartOk = true;
+                        /* Kuch PDFs ka Hindi custom/PUA font se embed hota hai — pdf.js un
+                           base consonants ko PUA codepoints (ya box glyphs) mein nikaalta hai
+                           isliye Hindi aur Aadhaar/VID digits bhi embedded text se nahi milte.
+                           Agar Hindi lines mein PUA/garbage dikhe to OCR bhi chalaao — OCR image
+                           se sahi Devanagari + number dono de deta hai. */
+                        puaHindi = hasPuaInHindi(pdfPart);
                     } else {
                         /* direct text kam hai ya garbled (PUA wale PDFs mein) — to OCR use karo */
                         parts.push(pdfPart);
@@ -2268,17 +2275,27 @@ Uttar Pradesh - 231313</textarea>
                 }
             }
 
-            if (!pdfPartOk) {
-                showProgress('OCR chal raha hai (crop area)...');
-                updateProgress(40);
-                try {
-                    var ocrPart = await ocrCanvas(fullCv);
-                    if (ocrPart.replace(/\s/g, '').length > 2) parts.push(ocrPart);
-                } catch (err) { }
-            } else {
-                showProgress('PDF direct text se data extract ho raha hai (fast)...');
-                updateProgress(80);
+            if (pdfPartOk && !puaHindi) {
+                /* Pehle sirf direct text se try karo (fast). Agar aadhaar/VID miss ho jaaye
+                   (custom-font digits jo embedded text mein nahi aaye), to OCR bhi chalaakar
+                   dono sources se data le lo. */
+                fillFromExtractedText(parts.join('\n'));
+                var ae0 = el('aadhaarNo'), ve0 = el('vidNo');
+                var idMissing = (!ae0 || /X{4}/.test(ae0.value || '')) || (!ve0 || /X{4}/.test(ve0.value || ''));
+                if (!idMissing) {
+                    showProgress('PDF direct text se data extract ho raha hai (fast)...');
+                    updateProgress(80);
+                    return true;
+                }
+                /* aadhaar/VID na mile → OCR bhi chalaao */
             }
+
+            showProgress('OCR chal raha hai (crop area)...');
+            updateProgress(40);
+            try {
+                var ocrPart = await ocrCanvas(fullCv);
+                if (ocrPart.replace(/\s/g, '').length > 2) parts.push(ocrPart);
+            } catch (err) { }
 
             return fillFromExtractedText(parts.join('\n'));
         }
@@ -2759,47 +2776,69 @@ Uttar Pradesh - 231313</textarea>
             /* ek bhi Devanagari char hai to true */
             return /[\u0900-\u097F]/.test(t || '');
         }
+        function hasPuaInHindi(t) {
+            /* PDF ka koi bhi Devanagari line agar BMP PUA (\uE000-\uF8FF), supplementary PUA
+               (high surrogate \uDB80-\uDBBF) ya box glyphs se bhari ho to wo font mapping
+               custom/PUA hai — embedded text unreliable hai (Hindi + digits dono toot sakte hain). */
+            if (!t) return false;
+            return t.split(/\n/).some(function (l) {
+                if (!/[\u0900-\u097F]/.test(l)) return false;
+                return /[\uE000-\uF8FF\uDB80-\uDBBF\u25A0-\u25FF\u2580-\u259F]/.test(l);
+            });
+        }
 
-        function extractIdNumbers(fullText) {
+        function extractIdNumbers(fullText, lines) {
             if (!fullText) return;
-            var aP = [
-                /\b(\d{4}\s\d{4}\s\d{4})\b/,
-                /\b(\d{4}\s?\d{4}\s?\d{4})\b/,
-                /\b(\d{12})\b/,
-                /(\d{4}[\s\-]\d{4}[\s\-]\d{4})/
-            ];
-            var ai, m;
-            for (ai = 0; ai < aP.length; ai++) {
-                m = fullText.match(aP[ai]);
-                if (m) {
-                    var an = m[1].replace(/[\s\-]/g, '');
-                    if (an.length === 12) {
-                        var ae = el('aadhaarNo');
-                        if (ae) {
-                            ae.value = an.replace(/(\d{4})(?=\d)/g, '$1 ');
-                            formatAadhaar(ae);
-                        }
-                        break;
-                    }
+            lines = lines || [];
+            var aadhaar = null;
+            var vid = null;
+            var SEP = '[\\s\\-\\–\\.]?';
+
+            /* VID: explicit label "VID : XXXX XXXX XXXX XXXX" wali line. */
+            var reVID = new RegExp('VID\\s*[:：]?\\s*(\\d{4})' + SEP + '(\\d{4})' + SEP + '(\\d{4})' + SEP + '(\\d{4})', 'i');
+            for (var li = 0; li < lines.length; li++) {
+                var mm = lines[li].match(reVID);
+                if (mm) { vid = mm[1] + mm[2] + mm[3] + mm[4]; break; }
+            }
+
+            /* Aadhaar: kisi bhi line mein 3-group number, lekin "VID" wali nahi.
+               Agar line mein 4th group bhi ho (VID jaisa) to skip — taaki VID ki
+               first 3 group kabhi aadhaar na banen. */
+            var re3 = new RegExp('\\b(\\d{4})' + SEP + '(\\d{4})' + SEP + '(\\d{4})\\b');
+            for (var lj = 0; lj < lines.length; lj++) {
+                var L = lines[lj];
+                if (/VID/i.test(L)) continue;
+                var m3 = L.match(re3);
+                if (!m3) continue;
+                var rest = L.slice(m3.index + m3[0].length);
+                if (/^[\s\-–.]+/.test(rest) && /^\s*[\s\-–.]?\d{4}/.test(rest)) continue;
+                aadhaar = m3[1] + m3[2] + m3[3];
+                break;
+            }
+
+            /* merged continuous runs — OCR ne spaces kha diye hon to bhi mil jaaye */
+            var text = ' ' + fullText.replace(/\s+/g, ' ') + ' ';
+            if (!aadhaar) {
+                var m12 = text.match(/\b\d{12}\b/);
+                if (m12) aadhaar = m12[0];
+            }
+            if (!vid) {
+                var m16 = text.match(/\b\d{16}\b/);
+                if (m16) vid = m16[0];
+            }
+
+            if (aadhaar) {
+                var ae = el('aadhaarNo');
+                if (ae) {
+                    ae.value = aadhaar.replace(/(\d{4})(?=\d)/g, '$1 ');
+                    formatAadhaar(ae);
                 }
             }
-            var vP = [
-                /\b(\d{4}\s\d{4}\s\d{4}\s\d{4})\b/,
-                /\b(\d{16})\b/,
-                /(\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4})/
-            ];
-            for (ai = 0; ai < vP.length; ai++) {
-                m = fullText.match(vP[ai]);
-                if (m) {
-                    var vn = m[1].replace(/[\s\-]/g, '');
-                    if (vn.length === 16) {
-                        var ve = el('vidNo');
-                        if (ve) {
-                            ve.value = vn.replace(/(\d{4})(?=\d)/g, '$1 ');
-                            formatVID(ve);
-                        }
-                        break;
-                    }
+            if (vid) {
+                var ve = el('vidNo');
+                if (ve) {
+                    ve.value = vid.replace(/(\d{4})(?=\d)/g, '$1 ');
+                    formatVID(ve);
                 }
             }
         }
@@ -2942,6 +2981,9 @@ Uttar Pradesh - 231313</textarea>
             var hindiAddr = lines.filter(function (l) {
                 var cl = _cleanLine(l);
                 if (!_hasValidHindi(cl) || _isGarbled(cl)) return false;
+                /* PUA/custom-font Hindi (base consonants PUA mein embed hote hain) —
+                   unreliable hai, reject karo taaki uska OCR version line use ho. */
+                if (/[\uE000-\uF8FF\uDB80-\uDBBF\u25A0-\u25FF\u2580-\u259F]/.test(cl)) return false;
                 if (cl.length <= 5) return false;
                 if (/\bDOB\b|जन्म|जन्मतिथि|जन्म\s*तिथि|पुरुष|महिला|लिंग/i.test(cl)) return false;
                 if (/(Mobile|Phone|Tel|Email|Signature|Digitally|Identification|Authority|Date\s*:|^IST$|Aadhaar|issued|VID|Enrolment|^To$|आधार|पहचान|प्रमाण|नागरिकता|सत्यापन|प्रमाणीकरण|उपयोग|क्यूआर|ऑफलाइन|ऑनलाइन|यूनिक|यूआईडीएआई)/i.test(cl)) return false;
@@ -2960,7 +3002,7 @@ Uttar Pradesh - 231313</textarea>
             }).map(_cleanLine);
             if (!hindiAddr.length && _hasValidHindi(fullText)) {
                 var fullHi = fullText.split(/\n|\. /).filter(function (seg) {
-                    return _hindiRatio(seg) >= 0.45 && _englishRatio(seg) <= 0.22;
+                    return _hindiRatio(seg) >= 0.45 && _englishRatio(seg) <= 0.22 && !/[\uE000-\uF8FF\uDB80-\uDBBF\u25A0-\u25FF]/.test(seg);
                 }).map(_cleanLine);
                 if (fullHi.length) hindiAddr = fullHi.slice(0, 4);
                 else hindiAddr = [_cleanLine(fullText)];
@@ -2985,7 +3027,7 @@ Uttar Pradesh - 231313</textarea>
             }).map(_cleanLine);
             if (engAddr.length > 0) setInputVal('addressEn', 'Address:\n' + engAddr.join('\n'));
 
-            extractIdNumbers(fullText);
+            extractIdNumbers(fullText, lines);
         }
 
         /* =====================================================================
